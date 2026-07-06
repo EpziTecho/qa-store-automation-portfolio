@@ -10,7 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import java.math.BigDecimal;
 
 /*
@@ -210,5 +211,144 @@ class ProductControllerIntegrationTest {
                                 .andExpect(jsonPath("$.status", is(400)))
                                 .andExpect(jsonPath("$.error", is("Bad Request")))
                                 .andExpect(jsonPath("$.message", is("Request validation failed")));
+        }
+
+        @Test
+        @DisplayName("PUT /api/products/{id} should update product when request is valid")
+        void shouldUpdateProductWhenRequestIsValid() throws Exception {
+                CategoryEntity electronics = categoryRepository.save(new CategoryEntity(
+                                "Electronics",
+                                "Electronic devices and accessories",
+                                true));
+
+                CategoryEntity accessories = categoryRepository.save(new CategoryEntity(
+                                "Accessories",
+                                "General workstation accessories",
+                                true));
+
+                ProductEntity product = productRepository.save(new ProductEntity(
+                                "Mechanical Keyboard",
+                                "Keyboard for automation engineers",
+                                new BigDecimal("85.90"),
+                                20,
+                                true,
+                                accessories));
+
+                String requestBody = """
+                                {
+                                  "name": "Updated Keyboard",
+                                  "description": "Updated keyboard description",
+                                  "price": 99.90,
+                                  "stock": 30,
+                                  "categoryId": %d
+                                }
+                                """.formatted(electronics.getId());
+
+                mockMvc.perform(put("/api/products/" + product.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.id", is(product.getId().intValue())))
+                                .andExpect(jsonPath("$.name", is("Updated Keyboard")))
+                                .andExpect(jsonPath("$.description", is("Updated keyboard description")))
+                                .andExpect(jsonPath("$.stock", is(30)))
+                                .andExpect(jsonPath("$.categoryId", is(electronics.getId().intValue())))
+                                .andExpect(jsonPath("$.categoryName", is("Electronics")));
+        }
+
+        @Test
+        @DisplayName("PUT /api/products/{id} should return 404 when product does not exist")
+        void shouldReturnNotFoundWhenUpdatingProductDoesNotExist() throws Exception {
+                CategoryEntity electronics = categoryRepository.save(new CategoryEntity(
+                                "Electronics",
+                                "Electronic devices and accessories",
+                                true));
+
+                String requestBody = """
+                                {
+                                  "name": "Updated Keyboard",
+                                  "description": "Updated keyboard description",
+                                  "price": 99.90,
+                                  "stock": 30,
+                                  "categoryId": %d
+                                }
+                                """.formatted(electronics.getId());
+
+                mockMvc.perform(put("/api/products/999999")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody))
+                                .andExpect(status().isNotFound())
+                                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.status", is(404)))
+                                .andExpect(jsonPath("$.message", is("Product with id 999999 was not found")));
+        }
+
+        @Test
+        @DisplayName("PUT /api/products/{id} should return 404 when category does not exist")
+        void shouldReturnNotFoundWhenUpdatingProductWithInvalidCategory() throws Exception {
+                CategoryEntity accessories = categoryRepository.save(new CategoryEntity(
+                                "Accessories",
+                                "General workstation accessories",
+                                true));
+
+                ProductEntity product = productRepository.save(new ProductEntity(
+                                "Mechanical Keyboard",
+                                "Keyboard for automation engineers",
+                                new BigDecimal("85.90"),
+                                20,
+                                true,
+                                accessories));
+
+                String requestBody = """
+                                {
+                                  "name": "Updated Keyboard",
+                                  "description": "Updated keyboard description",
+                                  "price": 99.90,
+                                  "stock": 30,
+                                  "categoryId": 999999
+                                }
+                                """;
+
+                mockMvc.perform(put("/api/products/" + product.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody))
+                                .andExpect(status().isNotFound())
+                                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.status", is(404)))
+                                .andExpect(jsonPath("$.message", is("Category with id 999999 was not found")));
+        }
+
+        @Test
+        @DisplayName("DELETE /api/products/{id} should deactivate product when product exists")
+        void shouldDeactivateProductWhenProductExists() throws Exception {
+                CategoryEntity accessories = categoryRepository.save(new CategoryEntity(
+                                "Accessories",
+                                "General workstation accessories",
+                                true));
+
+                ProductEntity product = productRepository.save(new ProductEntity(
+                                "Mechanical Keyboard",
+                                "Keyboard for automation engineers",
+                                new BigDecimal("85.90"),
+                                20,
+                                true,
+                                accessories));
+
+                mockMvc.perform(delete("/api/products/" + product.getId()))
+                                .andExpect(status().isNoContent());
+
+                mockMvc.perform(get("/api/products/" + product.getId()))
+                                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("DELETE /api/products/{id} should return 404 when product does not exist")
+        void shouldReturnNotFoundWhenDeletingProductDoesNotExist() throws Exception {
+                mockMvc.perform(delete("/api/products/999999"))
+                                .andExpect(status().isNotFound())
+                                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.status", is(404)))
+                                .andExpect(jsonPath("$.message", is("Product with id 999999 was not found")));
         }
 }

@@ -12,7 +12,8 @@ import java.util.List;
  *
  * Interaction:
  * ProductController depends on this interface instead of a concrete implementation.
- * InMemoryProductService implements this contract for the current phase.
+ * ProductJpaService implements this contract using MySQL through JPA.
+ * InMemoryProductService can implement it for the in-memory profile.
  *
  * Design Pattern:
  * Service Layer + Dependency Inversion.
@@ -31,4 +32,8 @@ public interface ProductService {
     Product findById(Long id);
 
     Product create(CreateProductRequest request);
+
+    Product update(Long id, UpdateProductRequest request);
+
+    void delete(Long id);
 }

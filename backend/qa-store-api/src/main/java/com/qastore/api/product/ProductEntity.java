@@ -157,4 +157,33 @@ public class ProductEntity {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    /*
+     * Updates mutable product fields.
+     *
+     * This method keeps update behavior inside the entity instead of exposing
+     * public setters for every field.
+     */
+    public void updateDetails(
+            String name,
+            String description,
+            BigDecimal price,
+            Integer stock,
+            CategoryEntity category) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.stock = stock;
+        this.category = category;
+    }
+
+    /*
+     * Performs a logical deletion.
+     *
+     * The record remains in the database, but normal API queries will no longer
+     * return it because repositories filter by active = true.
+     */
+    public void deactivate() {
+        this.active = false;
+    }
 }

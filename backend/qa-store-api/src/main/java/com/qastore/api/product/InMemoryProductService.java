@@ -69,6 +69,7 @@ public class InMemoryProductService implements ProductService {
     public List<Product> findAll() {
         return products.values()
                 .stream()
+                .filter(Product::active)
                 .sorted(Comparator.comparing(Product::id))
                 .toList();
     }
@@ -77,7 +78,7 @@ public class InMemoryProductService implements ProductService {
     public Product findById(Long id) {
         Product product = products.get(id);
 
-        if (product == null) {
+        if (product == null || !product.active()) {
             throw new ProductNotFoundException(id);
         }
 
@@ -103,12 +104,42 @@ public class InMemoryProductService implements ProductService {
         return product;
     }
 
-    /*
-     * Resolves a category name for the in-memory profile.
-     *
-     * This implementation does not access MySQL, so it uses a controlled
-     * local mapping only for development or isolated executions.
-     */
+    @Override
+    public Product update(Long id, UpdateProductRequest request) {
+        Product existingProduct = findById(id);
+
+        Product updatedProduct = new Product(
+                existingProduct.id(),
+                request.name(),
+                request.description(),
+                request.price(),
+                request.stock(),
+                true,
+                request.categoryId(),
+                resolveCategoryName(request.categoryId()));
+
+        products.put(id, updatedProduct);
+
+        return updatedProduct;
+    }
+
+    @Override
+    public void delete(Long id) {
+        Product existingProduct = findById(id);
+
+        Product inactiveProduct = new Product(
+                existingProduct.id(),
+                existingProduct.name(),
+                existingProduct.description(),
+                existingProduct.price(),
+                existingProduct.stock(),
+                false,
+                existingProduct.categoryId(),
+                existingProduct.categoryName());
+
+        products.put(id, inactiveProduct);
+    }
+
     private String resolveCategoryName(Long categoryId) {
         if (categoryId == null) {
             return "Unassigned";

@@ -31,6 +31,7 @@ import java.util.List;
  * - Separation of concerns: business operations are separated from HTTP handling.
  * - Transaction management: database operations are executed inside transactions.
  * - Referential integrity: products must reference an existing category.
+ * - Soft delete: delete operations deactivate records instead of removing them.
  * ============================================================
  */
 
@@ -52,7 +53,7 @@ public class ProductJpaService implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<Product> findAll() {
-        return productRepository.findAllByOrderByIdAsc()
+        return productRepository.findAllByActiveTrueOrderByIdAsc()
                 .stream()
                 .map(ProductMapper::toDomain)
                 .toList();
@@ -61,20 +62,59 @@ public class ProductJpaService implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public Product findById(Long id) {
-        return productRepository.findById(id)
+        return productRepository.findByIdAndActiveTrue(id)
                 .map(ProductMapper::toDomain)
                 .orElseThrow(() -> new ProductNotFoundException(id));
     }
 
     @Override
     public Product create(CreateProductRequest request) {
-        CategoryEntity category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new CategoryNotFoundException(request.categoryId()));
+        CategoryEntity category = findCategoryOrThrow(request.categoryId());
 
         ProductEntity entity = ProductMapper.toEntity(request, category);
 
         ProductEntity savedEntity = productRepository.save(entity);
 
         return ProductMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Product update(Long id, UpdateProductRequest request) {
+        ProductEntity product = productRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
+        CategoryEntity category = findCategoryOrThrow(request.categoryId());
+
+        product.updateDetails(
+                request.name(),
+                request.description(),
+                request.price(),
+                request.stock(),
+                category);
+
+        ProductEntity updatedProduct = productRepository.save(product);
+
+        return ProductMapper.toDomain(updatedProduct);
+    }
+
+    @Override
+    public void delete(Long id) {
+        ProductEntity product = productRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
+        product.deactivate();
+
+        productRepository.save(product);
+    }
+
+    /*
+     * Centralizes category lookup for create and update operations.
+     *
+     * This avoids duplicated repository calls and keeps the error behavior
+     * consistent across product use cases.
+     */
+    private CategoryEntity findCategoryOrThrow(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
     }
 }
