@@ -1,0 +1,64 @@
+# ============================================================
+# Global .gitignore
+# Project: QA Store Automation Portfolio
+#
+# Responsibility:
+# Exclude generated files, build artifacts, dependencies,
+# IDE metadata, logs, reports and sensitive local configuration.
+#
+# Engineering rationale:
+# The repository must contain only source code, configuration,
+# documentation and test assets required to reproduce the project.
+# ============================================================
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Node / Cypress
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Cypress generated artifacts
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+
+# Test reports
+allure-results/
+allure-report/
+test-output/
+surefire-reports/
+failsafe-reports/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+application-local.properties
+application-local.yml
+
+# Docker logs
+*.log
+
+# Database local files
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
