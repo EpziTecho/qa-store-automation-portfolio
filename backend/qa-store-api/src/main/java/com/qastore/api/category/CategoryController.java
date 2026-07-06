@@ -36,10 +36,18 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+    /*
+     * Constructor injection makes dependencies explicit and improves testability.
+     */
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
 
+    /*
+     * GET /api/categories
+     *
+     * Returns all active categories.
+     */
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> findAll() {
         List<CategoryResponse> response = categoryService.findAll()
@@ -50,6 +58,11 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
+    /*
+     * GET /api/categories/{id}
+     *
+     * Returns a single active category by id.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponse> findById(@PathVariable Long id) {
         Category category = categoryService.findById(id);
@@ -57,6 +70,11 @@ public class CategoryController {
         return ResponseEntity.ok(CategoryResponse.from(category));
     }
 
+    /*
+     * POST /api/categories
+     *
+     * Creates a new category.
+     */
     @PostMapping
     public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CreateCategoryRequest request) {
         Category createdCategory = categoryService.create(request);
@@ -66,5 +84,31 @@ public class CategoryController {
         return ResponseEntity
                 .created(location)
                 .body(CategoryResponse.from(createdCategory));
+    }
+
+    /*
+     * PUT /api/categories/{id}
+     *
+     * Updates an existing active category.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateCategoryRequest request) {
+        Category updatedCategory = categoryService.update(id, request);
+
+        return ResponseEntity.ok(CategoryResponse.from(updatedCategory));
+    }
+
+    /*
+     * DELETE /api/categories/{id}
+     *
+     * Performs logical deletion only if the category has no active products.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        categoryService.delete(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

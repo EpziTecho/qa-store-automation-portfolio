@@ -31,4 +31,8 @@ public interface CategoryService {
     Category findById(Long id);
 
     Category create(CreateCategoryRequest request);
+
+    Category update(Long id, UpdateCategoryRequest request);
+
+    void delete(Long id);
 }

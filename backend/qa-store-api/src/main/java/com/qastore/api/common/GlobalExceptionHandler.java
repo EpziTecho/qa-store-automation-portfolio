@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
+import com.qastore.api.category.CategoryHasActiveProductsException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -94,6 +94,21 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(DuplicateCategoryException.class)
         public ResponseEntity<ErrorResponse> handleDuplicateCategory(
                         DuplicateCategoryException exception,
+                        HttpServletRequest request) {
+                ErrorResponse response = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.CONFLICT.value(),
+                                HttpStatus.CONFLICT.getReasonPhrase(),
+                                exception.getMessage(),
+                                request.getRequestURI(),
+                                List.of());
+
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
+        @ExceptionHandler(CategoryHasActiveProductsException.class)
+        public ResponseEntity<ErrorResponse> handleCategoryHasActiveProducts(
+                        CategoryHasActiveProductsException exception,
                         HttpServletRequest request) {
                 ErrorResponse response = new ErrorResponse(
                                 LocalDateTime.now(),

@@ -24,14 +24,40 @@ import java.util.Optional;
  * - Separation of concerns: persistence access is isolated in a repository.
  * - DRY: avoids writing boilerplate SQL for common CRUD operations.
  * - Abstraction: service layer does not directly interact with EntityManager.
+ * - Soft delete support: queries can filter active records only.
  * ============================================================
  */
 
 public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> {
 
-    List<CategoryEntity> findAllByOrderByIdAsc();
+    /*
+     * Returns all active categories ordered by id.
+     *
+     * This supports soft delete because inactive categories should not appear
+     * in normal API responses.
+     */
+    List<CategoryEntity> findAllByActiveTrueOrderByIdAsc();
 
+    /*
+     * Finds an active category by id.
+     *
+     * If the category exists but active = false, the API treats it as not found.
+     */
+    Optional<CategoryEntity> findByIdAndActiveTrue(Long id);
+
+    /*
+     * Checks whether a category name already exists regardless of casing.
+     *
+     * Used during category creation.
+     */
     boolean existsByNameIgnoreCase(String name);
+
+    /*
+     * Checks whether another category already uses the same name.
+     *
+     * Used during update to prevent changing a category name to a duplicated one.
+     */
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 
     /*
      * Finds a category by name ignoring uppercase/lowercase differences.

@@ -9,7 +9,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import com.qastore.api.product.ProductEntity;
+import com.qastore.api.product.ProductRepository;
 
+import java.math.BigDecimal;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 /*
  * ============================================================
  * File: CategoryControllerIntegrationTest.java
@@ -169,5 +175,128 @@ class CategoryControllerIntegrationTest {
                 .andExpect(jsonPath("$.status", is(409)))
                 .andExpect(jsonPath("$.error", is("Conflict")))
                 .andExpect(jsonPath("$.message", is("Category with name 'Electronics' already exists")));
+    }
+
+    @Test
+    @DisplayName("PUT /api/categories/{id} should update category when request is valid")
+    void shouldUpdateCategoryWhenRequestIsValid() throws Exception {
+        CategoryEntity category = categoryRepository.save(new CategoryEntity(
+                "Electronics",
+                "Electronic devices and accessories",
+                true));
+
+        String requestBody = """
+                {
+                  "name": "Updated Electronics",
+                  "description": "Updated category description"
+                }
+                """;
+
+        mockMvc.perform(put("/api/categories/" + category.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(category.getId().intValue())))
+                .andExpect(jsonPath("$.name", is("Updated Electronics")))
+                .andExpect(jsonPath("$.description", is("Updated category description")))
+                .andExpect(jsonPath("$.active", is(true)));
+    }
+
+    @Test
+    @DisplayName("PUT /api/categories/{id} should return 404 when category does not exist")
+    void shouldReturnNotFoundWhenUpdatingCategoryDoesNotExist() throws Exception {
+        String requestBody = """
+                {
+                  "name": "Updated Electronics",
+                  "description": "Updated category description"
+                }
+                """;
+
+        mockMvc.perform(put("/api/categories/999999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status", is(404)))
+                .andExpect(jsonPath("$.message", is("Category with id 999999 was not found")));
+    }
+
+    @Test
+    @DisplayName("PUT /api/categories/{id} should return 409 when category name already exists")
+    void shouldReturnConflictWhenUpdatingCategoryWithDuplicatedName() throws Exception {
+        categoryRepository.save(new CategoryEntity(
+                "Electronics",
+                "Electronic devices and accessories",
+                true));
+
+        CategoryEntity accessories = categoryRepository.save(new CategoryEntity(
+                "Accessories",
+                "General workstation accessories",
+                true));
+
+        String requestBody = """
+                {
+                  "name": "Electronics",
+                  "description": "Trying to duplicate category name"
+                }
+                """;
+
+        mockMvc.perform(put("/api/categories/" + accessories.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status", is(409)))
+                .andExpect(jsonPath("$.message", is("Category with name 'Electronics' already exists")));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/categories/{id} should deactivate category when category has no active products")
+    void shouldDeactivateCategoryWhenCategoryHasNoActiveProducts() throws Exception {
+        CategoryEntity category = categoryRepository.save(new CategoryEntity(
+                "Temporary",
+                "Temporary category without products",
+                true));
+
+        mockMvc.perform(delete("/api/categories/" + category.getId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/categories/" + category.getId()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/categories/{id} should return 409 when category has active products")
+    void shouldReturnConflictWhenCategoryHasActiveProducts() throws Exception {
+        CategoryEntity category = categoryRepository.save(new CategoryEntity(
+                "Electronics",
+                "Electronic devices and accessories",
+                true));
+
+        productRepository.save(new ProductEntity(
+                "Laptop QA Pro",
+                "Laptop designed for automation testing practice",
+                new BigDecimal("1200.00"),
+                10,
+                true,
+                category));
+
+        mockMvc.perform(delete("/api/categories/" + category.getId()))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status", is(409)))
+                .andExpect(jsonPath("$.message", is(
+                        "Category with id " + category.getId() + " cannot be deleted because it has active products")));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/categories/{id} should return 404 when category does not exist")
+    void shouldReturnNotFoundWhenDeletingCategoryDoesNotExist() throws Exception {
+        mockMvc.perform(delete("/api/categories/999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status", is(404)))
+                .andExpect(jsonPath("$.message", is("Category with id 999999 was not found")));
     }
 }
