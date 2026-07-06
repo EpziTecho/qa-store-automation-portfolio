@@ -11,8 +11,8 @@ import java.math.BigDecimal;
  * Represents the internal product domain model used by the service layer.
  *
  * Interaction:
- * ProductService works with this model internally and ProductController
- * converts it into ProductResponse objects for HTTP responses.
+ * ProductJpaService maps ProductEntity into this domain model.
+ * ProductController converts this model into ProductResponse objects.
  *
  * Design Pattern:
  * Domain Model.
@@ -20,15 +20,17 @@ import java.math.BigDecimal;
  * Engineering Principles:
  * - Single Responsibility Principle: represents product data only.
  * - Immutability: Java records are immutable by default.
- * - Separation of concerns: internal model is separated from API DTOs.
+ * - Separation of concerns: internal model is separated from API DTOs and JPA entities.
  * ============================================================
  */
 
 public record Product(
-        Long id,
-        String name,
-        String description,
-        BigDecimal price,
-        Integer stock,
-        Boolean active) {
+                Long id,
+                String name,
+                String description,
+                BigDecimal price,
+                Integer stock,
+                Boolean active,
+                Long categoryId,
+                String categoryName) {
 }

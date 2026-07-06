@@ -1,5 +1,7 @@
 package com.qastore.api.product;
 
+import com.qastore.api.category.CategoryEntity;
+
 /*
  * ============================================================
  * File: ProductMapper.java
@@ -38,15 +40,18 @@ public final class ProductMapper {
                 entity.getDescription(),
                 entity.getPrice(),
                 entity.getStock(),
-                entity.getActive());
+                entity.getActive(),
+                entity.getCategory().getId(),
+                entity.getCategory().getName());
     }
 
-    public static ProductEntity toEntity(CreateProductRequest request) {
+    public static ProductEntity toEntity(CreateProductRequest request, CategoryEntity category) {
         return new ProductEntity(
                 request.name(),
                 request.description(),
                 request.price(),
                 request.stock(),
-                true);
+                true,
+                category);
     }
 }

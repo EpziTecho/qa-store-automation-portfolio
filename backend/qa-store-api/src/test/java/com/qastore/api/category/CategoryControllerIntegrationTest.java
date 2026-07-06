@@ -1,5 +1,6 @@
 package com.qastore.api.category;
 
+import com.qastore.api.product.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class CategoryControllerIntegrationTest {
-
+    @Autowired
+    private ProductRepository productRepository;
     @Autowired
     private MockMvc mockMvc;
 
@@ -51,6 +53,7 @@ class CategoryControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        productRepository.deleteAll();
         categoryRepository.deleteAll();
     }
 

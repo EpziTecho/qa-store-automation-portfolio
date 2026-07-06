@@ -1,5 +1,8 @@
 package com.qastore.api.product;
 
+import com.qastore.api.category.CategoryEntity;
+import com.qastore.api.category.CategoryNotFoundException;
+import com.qastore.api.category.CategoryRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +20,8 @@ import java.util.List;
  * Interaction:
  * ProductController depends on ProductService.
  * Spring injects this implementation by default because it is registered as a service.
- * ProductJpaService delegates persistence operations to ProductRepository.
+ * ProductJpaService delegates product persistence to ProductRepository and validates
+ * category existence through CategoryRepository.
  *
  * Design Pattern:
  * Service Layer + Repository Pattern.
@@ -26,7 +30,7 @@ import java.util.List;
  * - Dependency Inversion: implements ProductService abstraction.
  * - Separation of concerns: business operations are separated from HTTP handling.
  * - Transaction management: database operations are executed inside transactions.
- * - Replaceable implementation: replaces the previous in-memory implementation.
+ * - Referential integrity: products must reference an existing category.
  * ============================================================
  */
 
@@ -36,9 +40,13 @@ import java.util.List;
 public class ProductJpaService implements ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductJpaService(ProductRepository productRepository) {
+    public ProductJpaService(
+            ProductRepository productRepository,
+            CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
@@ -60,7 +68,10 @@ public class ProductJpaService implements ProductService {
 
     @Override
     public Product create(CreateProductRequest request) {
-        ProductEntity entity = ProductMapper.toEntity(request);
+        CategoryEntity category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new CategoryNotFoundException(request.categoryId()));
+
+        ProductEntity entity = ProductMapper.toEntity(request, category);
 
         ProductEntity savedEntity = productRepository.save(entity);
 

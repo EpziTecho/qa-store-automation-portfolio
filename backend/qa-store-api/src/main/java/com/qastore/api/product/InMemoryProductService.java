@@ -15,20 +15,21 @@ import java.util.concurrent.atomic.AtomicLong;
  * Module: Product
  *
  * Responsibility:
- * Provides a temporary in-memory implementation of ProductService.
+ * Provides an alternative in-memory implementation of ProductService.
  *
  * Interaction:
- * ProductController calls ProductService methods.
- * Spring injects this implementation because it is annotated with @Service.
+ * ProductController depends on ProductService.
+ * This implementation is only enabled when the Spring profile "in-memory"
+ * is active.
  *
  * Design Pattern:
  * Service Layer.
  *
  * Engineering Principles:
- * - Single Responsibility Principle: manages product operations for this phase.
  * - Dependency Inversion: implements ProductService abstraction.
- * - Thread-safety: uses ConcurrentHashMap and AtomicLong.
- * - Incremental design: will later be replaced by a database-backed implementation.
+ * - Replaceable implementation: can be swapped with ProductJpaService.
+ * - Profile-based configuration: avoids bean conflicts with the JPA service.
+ * - Testability: useful for isolated local executions without database access.
  * ============================================================
  */
 
@@ -46,7 +47,9 @@ public class InMemoryProductService implements ProductService {
                 "Laptop designed for automation testing practice",
                 new BigDecimal("1200.00"),
                 10,
-                true);
+                true,
+                1L,
+                "Electronics");
 
         Product mouse = new Product(
                 sequence.incrementAndGet(),
@@ -54,7 +57,9 @@ public class InMemoryProductService implements ProductService {
                 "Wireless mouse for QA workstation",
                 new BigDecimal("25.50"),
                 50,
-                true);
+                true,
+                2L,
+                "Accessories");
 
         products.put(laptop.id(), laptop);
         products.put(mouse.id(), mouse);
@@ -89,10 +94,34 @@ public class InMemoryProductService implements ProductService {
                 request.description(),
                 request.price(),
                 request.stock(),
-                true);
+                true,
+                request.categoryId(),
+                resolveCategoryName(request.categoryId()));
 
         products.put(id, product);
 
         return product;
+    }
+
+    /*
+     * Resolves a category name for the in-memory profile.
+     *
+     * This implementation does not access MySQL, so it uses a controlled
+     * local mapping only for development or isolated executions.
+     */
+    private String resolveCategoryName(Long categoryId) {
+        if (categoryId == null) {
+            return "Unassigned";
+        }
+
+        if (categoryId.equals(1L)) {
+            return "Electronics";
+        }
+
+        if (categoryId.equals(2L)) {
+            return "Accessories";
+        }
+
+        return "In-Memory Category";
     }
 }
