@@ -1,5 +1,6 @@
 package com.qastore.api.product;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 
 @Service
+@Profile("in-memory")
 public class InMemoryProductService implements ProductService {
 
     private final ConcurrentHashMap<Long, Product> products = new ConcurrentHashMap<>();
