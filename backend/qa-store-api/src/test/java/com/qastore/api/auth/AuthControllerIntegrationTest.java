@@ -15,6 +15,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
 /*
  * ============================================================
  * File: AuthControllerIntegrationTest.java
@@ -47,6 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthControllerIntegrationTest {
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -212,5 +217,56 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.status", is(400)))
                 .andExpect(jsonPath("$.error", is("Bad Request")))
                 .andExpect(jsonPath("$.message", is("Request validation failed")));
+    }
+
+    @Test
+    @DisplayName("GET /api/auth/me should return current user when JWT is valid")
+    void shouldReturnCurrentUserWhenJwtIsValid() throws Exception {
+        RoleEntity adminRole = roleRepository.save(new RoleEntity(
+                RoleName.ROLE_ADMIN,
+                "Administrator role"));
+
+        UserEntity adminUser = new UserEntity(
+                "System",
+                "Administrator",
+                "admin@qastore.com",
+                passwordEncoder.encode("Admin12345"),
+                true);
+
+        adminUser.addRole(adminRole);
+
+        UserEntity savedUser = userRepository.save(adminUser);
+
+        String token = jwtService.generateToken(savedUser);
+
+        mockMvc.perform(get("/api/auth/me")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.userId", is(savedUser.getId().intValue())))
+                .andExpect(jsonPath("$.email", is("admin@qastore.com")))
+                .andExpect(jsonPath("$.roles", contains("ROLE_ADMIN")));
+    }
+
+    @Test
+    @DisplayName("GET /api/auth/me should return 401 when JWT is missing")
+    void shouldReturnUnauthorizedWhenJwtIsMissing() throws Exception {
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status", is(401)))
+                .andExpect(jsonPath("$.error", is("Unauthorized")))
+                .andExpect(jsonPath("$.message", is("Authentication is required")));
+    }
+
+    @Test
+    @DisplayName("GET /api/auth/me should return 401 when JWT is invalid")
+    void shouldReturnUnauthorizedWhenJwtIsInvalid() throws Exception {
+        mockMvc.perform(get("/api/auth/me")
+                .header("Authorization", "Bearer invalid.token.value"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status", is(401)))
+                .andExpect(jsonPath("$.message", is("Authentication is required")));
     }
 }

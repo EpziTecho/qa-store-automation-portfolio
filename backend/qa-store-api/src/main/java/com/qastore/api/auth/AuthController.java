@@ -1,6 +1,7 @@
 package com.qastore.api.auth;
 
 import com.qastore.api.common.ErrorResponse;
+import com.qastore.api.user.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +11,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /*
  * ============================================================
@@ -22,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * Interaction:
  * Receives login requests, delegates credential validation to AuthService
- * and returns authentication responses.
+ * and exposes the current authenticated user from Spring Security.
  *
  * Design Pattern:
  * MVC Controller pattern.
@@ -51,9 +55,7 @@ public class AuthController {
     /*
      * POST /api/auth/login
      *
-     * Validates user credentials.
-     *
-     * In the next block this endpoint will return a JWT access token.
+     * Validates user credentials and returns a JWT access token.
      */
     @PostMapping("/login")
     @Operation(summary = "Login user", description = "Validates user credentials against the stored BCrypt password hash and returns a JWT access token.")
@@ -64,6 +66,37 @@ public class AuthController {
     })
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /*
+     * GET /api/auth/me
+     *
+     * Returns the currently authenticated user.
+     *
+     * This endpoint is intentionally protected and is used to verify that JWT
+     * authentication works end-to-end.
+     */
+    @GetMapping("/me")
+    @Operation(summary = "Get current authenticated user", description = "Returns the authenticated user extracted from the JWT Bearer token.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Authenticated user returned successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CurrentUserResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Authentication is required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<CurrentUserResponse> me(Authentication authentication) {
+        AuthenticatedUser authenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
+
+        List<String> roles = authenticatedUser.getAuthorities()
+                .stream()
+                .map(authority -> authority.getAuthority())
+                .sorted()
+                .toList();
+
+        CurrentUserResponse response = new CurrentUserResponse(
+                authenticatedUser.getId(),
+                authenticatedUser.getEmail(),
+                roles);
 
         return ResponseEntity.ok(response);
     }

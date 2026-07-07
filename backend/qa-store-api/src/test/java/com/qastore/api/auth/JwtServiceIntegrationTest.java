@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
+
+import org.springframework.security.core.userdetails.User;
 /*
  * ============================================================
  * File: JwtServiceIntegrationTest.java
@@ -62,5 +64,13 @@ class JwtServiceIntegrationTest {
         assertThat(token).isNotBlank();
         assertThat(claims.getSubject()).isEqualTo("admin@qastore.com");
         assertThat(claims.get("roles", List.class)).contains("ROLE_ADMIN");
+
+        User userDetails = new User(
+                "admin@qastore.com",
+                "alreadyEncodedPassword",
+                List.of(() -> "ROLE_ADMIN"));
+
+        assertThat(jwtService.isTokenValid(token, userDetails)).isTrue();
+
     }
 }

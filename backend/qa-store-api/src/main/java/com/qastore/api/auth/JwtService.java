@@ -14,6 +14,7 @@ import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import org.springframework.security.core.userdetails.UserDetails;
 
 /*
  * ============================================================
@@ -147,5 +148,28 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
 
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    /*
+     * Validates whether the token belongs to the provided user and is not expired.
+     *
+     * The token is considered valid when:
+     * - Its signature is valid.
+     * - Its subject matches the authenticated user's username.
+     * - Its expiration date is still in the future.
+     */
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        String username = extractUsername(token);
+
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    }
+
+    /*
+     * Checks whether the token expiration date is before the current time.
+     */
+    private boolean isTokenExpired(String token) {
+        Date expiration = extractClaims(token).getExpiration();
+
+        return expiration.before(new Date());
     }
 }
