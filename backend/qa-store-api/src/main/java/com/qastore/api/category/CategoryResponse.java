@@ -1,5 +1,7 @@
 package com.qastore.api.category;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /*
  * ============================================================
  * File: CategoryResponse.java
@@ -21,11 +23,16 @@ package com.qastore.api.category;
  * ============================================================
  */
 
+@Schema(description = "Category response returned by the API")
 public record CategoryResponse(
-        Long id,
-        String name,
-        String description,
-        Boolean active) {
+
+        @Schema(description = "Category ID", example = "1") Long id,
+
+        @Schema(description = "Category name", example = "Electronics") String name,
+
+        @Schema(description = "Category description", example = "Electronic devices and accessories") String description,
+
+        @Schema(description = "Indicates whether the category is active", example = "true") Boolean active) {
 
     public static CategoryResponse from(Category category) {
         return new CategoryResponse(

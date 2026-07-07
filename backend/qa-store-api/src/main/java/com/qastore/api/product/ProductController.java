@@ -1,6 +1,16 @@
 package com.qastore.api.product;
 
+import com.qastore.api.common.ErrorResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +42,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@Tag(name = "Products", description = "Operations for managing products in the QA Store catalog")
 public class ProductController {
 
     private final ProductService productService;
@@ -46,12 +57,9 @@ public class ProductController {
         this.productService = productService;
     }
 
-    /*
-     * GET /api/products
-     *
-     * Returns all active products.
-     */
     @GetMapping
+    @Operation(summary = "Get all active products", description = "Returns all products that are currently active. Products marked as inactive through soft delete are not returned.")
+    @ApiResponse(responseCode = "200", description = "Active products returned successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, array = @ArraySchema(schema = @Schema(implementation = ProductResponse.class))))
     public ResponseEntity<List<ProductResponse>> findAll() {
         List<ProductResponse> response = productService.findAll()
                 .stream()
@@ -61,24 +69,26 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    /*
-     * GET /api/products/{id}
-     *
-     * Returns a single active product by id.
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> findById(@PathVariable Long id) {
+    @Operation(summary = "Get product by ID", description = "Returns a single active product by its ID. If the product does not exist or is inactive, the API returns 404.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Product found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProductResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<ProductResponse> findById(
+            @Parameter(description = "Product ID", example = "1") @PathVariable Long id) {
         Product product = productService.findById(id);
 
         return ResponseEntity.ok(ProductResponse.from(product));
     }
 
-    /*
-     * POST /api/products
-     *
-     * Creates a new product.
-     */
     @PostMapping
+    @Operation(summary = "Create product", description = "Creates a new product associated with an existing category.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Product created successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProductResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Category not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody CreateProductRequest request) {
         Product createdProduct = productService.create(request);
 
@@ -89,27 +99,30 @@ public class ProductController {
                 .body(ProductResponse.from(createdProduct));
     }
 
-    /*
-     * PUT /api/products/{id}
-     *
-     * Updates an existing active product.
-     */
     @PutMapping("/{id}")
+    @Operation(summary = "Update product", description = "Updates an existing active product. The product can also be moved to another existing category.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Product updated successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProductResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Product or category not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<ProductResponse> update(
-            @PathVariable Long id,
+            @Parameter(description = "Product ID", example = "1") @PathVariable Long id,
+
             @Valid @RequestBody UpdateProductRequest request) {
         Product updatedProduct = productService.update(id, request);
 
         return ResponseEntity.ok(ProductResponse.from(updatedProduct));
     }
 
-    /*
-     * DELETE /api/products/{id}
-     *
-     * Performs logical deletion by marking active = false.
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    @Operation(summary = "Soft delete product", description = "Performs logical deletion by setting active = false. The product remains in the database but is hidden from normal API queries.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Product deleted logically"),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "Product ID", example = "1") @PathVariable Long id) {
         productService.delete(id);
 
         return ResponseEntity.noContent().build();

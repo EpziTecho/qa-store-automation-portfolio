@@ -1,6 +1,16 @@
 package com.qastore.api.category;
 
+import com.qastore.api.common.ErrorResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +42,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
+@Tag(name = "Categories", description = "Operations for managing product categories")
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -43,12 +54,9 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    /*
-     * GET /api/categories
-     *
-     * Returns all active categories.
-     */
     @GetMapping
+    @Operation(summary = "Get all active categories", description = "Returns all active categories. Categories marked as inactive through soft delete are not returned.")
+    @ApiResponse(responseCode = "200", description = "Active categories returned successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, array = @ArraySchema(schema = @Schema(implementation = CategoryResponse.class))))
     public ResponseEntity<List<CategoryResponse>> findAll() {
         List<CategoryResponse> response = categoryService.findAll()
                 .stream()
@@ -58,24 +66,26 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
-    /*
-     * GET /api/categories/{id}
-     *
-     * Returns a single active category by id.
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponse> findById(@PathVariable Long id) {
+    @Operation(summary = "Get category by ID", description = "Returns a single active category by its ID. If the category does not exist or is inactive, the API returns 404.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Category found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CategoryResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Category not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<CategoryResponse> findById(
+            @Parameter(description = "Category ID", example = "1") @PathVariable Long id) {
         Category category = categoryService.findById(id);
 
         return ResponseEntity.ok(CategoryResponse.from(category));
     }
 
-    /*
-     * POST /api/categories
-     *
-     * Creates a new category.
-     */
     @PostMapping
+    @Operation(summary = "Create category", description = "Creates a new product category. Category names must be unique.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Category created successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CategoryResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Category name already exists", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CreateCategoryRequest request) {
         Category createdCategory = categoryService.create(request);
 
@@ -86,27 +96,32 @@ public class CategoryController {
                 .body(CategoryResponse.from(createdCategory));
     }
 
-    /*
-     * PUT /api/categories/{id}
-     *
-     * Updates an existing active category.
-     */
     @PutMapping("/{id}")
+    @Operation(summary = "Update category", description = "Updates an existing active category. The new category name must not be used by another category.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Category updated successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CategoryResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Category not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Category name already exists", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<CategoryResponse> update(
-            @PathVariable Long id,
+            @Parameter(description = "Category ID", example = "1") @PathVariable Long id,
+
             @Valid @RequestBody UpdateCategoryRequest request) {
         Category updatedCategory = categoryService.update(id, request);
 
         return ResponseEntity.ok(CategoryResponse.from(updatedCategory));
     }
 
-    /*
-     * DELETE /api/categories/{id}
-     *
-     * Performs logical deletion only if the category has no active products.
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    @Operation(summary = "Soft delete category", description = "Performs logical deletion by setting active = false. Categories with active products cannot be deleted.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Category deleted logically"),
+            @ApiResponse(responseCode = "404", description = "Category not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Category has active products and cannot be deleted", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "Category ID", example = "1") @PathVariable Long id) {
         categoryService.delete(id);
 
         return ResponseEntity.noContent().build();

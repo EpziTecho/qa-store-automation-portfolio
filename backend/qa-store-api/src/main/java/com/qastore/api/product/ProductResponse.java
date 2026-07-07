@@ -1,5 +1,7 @@
 package com.qastore.api.product;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.math.BigDecimal;
 
 /*
@@ -23,15 +25,24 @@ import java.math.BigDecimal;
  * ============================================================
  */
 
+@Schema(description = "Product response returned by the API")
 public record ProductResponse(
-        Long id,
-        String name,
-        String description,
-        BigDecimal price,
-        Integer stock,
-        Boolean active,
-        Long categoryId,
-        String categoryName) {
+
+        @Schema(description = "Product ID", example = "1") Long id,
+
+        @Schema(description = "Product name", example = "Mechanical Keyboard") String name,
+
+        @Schema(description = "Product description", example = "Keyboard for automation engineers") String description,
+
+        @Schema(description = "Product price", example = "85.90") BigDecimal price,
+
+        @Schema(description = "Available product stock", example = "20") Integer stock,
+
+        @Schema(description = "Indicates whether the product is active", example = "true") Boolean active,
+
+        @Schema(description = "Category ID associated with the product", example = "1") Long categoryId,
+
+        @Schema(description = "Category name associated with the product", example = "Electronics") String categoryName) {
 
     /*
      * Converts the internal Product model into an HTTP response DTO.

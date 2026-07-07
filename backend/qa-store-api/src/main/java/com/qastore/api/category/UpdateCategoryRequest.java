@@ -1,5 +1,6 @@
 package com.qastore.api.category;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 /*
@@ -24,9 +25,10 @@ import jakarta.validation.constraints.NotBlank;
  * ============================================================
  */
 
+@Schema(description = "Request body used to update an existing category")
 public record UpdateCategoryRequest(
 
-        @NotBlank(message = "Category name is required") String name,
+                @Schema(description = "Updated category name. Must not be used by another category.", example = "Updated Electronics") @NotBlank(message = "Category name is required") String name,
 
-        @NotBlank(message = "Category description is required") String description) {
+                @Schema(description = "Updated category description", example = "Updated category description") @NotBlank(message = "Category description is required") String description) {
 }
