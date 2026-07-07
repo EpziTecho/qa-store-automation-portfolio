@@ -10,10 +10,11 @@ import java.util.List;
  * Module: Authentication
  *
  * Responsibility:
- * Represents the JSON response returned after a successful login validation.
+ * Represents the JSON response returned after successful authentication.
  *
  * Interaction:
- * AuthService creates this response after validating user credentials.
+ * AuthService creates this response after validating user credentials and
+ * generating a JWT access token.
  * AuthController returns it to the API client.
  *
  * Design Pattern:
@@ -22,7 +23,7 @@ import java.util.List;
  * Engineering Principles:
  * - API contract clarity.
  * - Separation between authentication result and persistence entities.
- * - Security readiness: this DTO will later include JWT token information.
+ * - Security: exposes the token but never exposes password data.
  * ============================================================
  */
 
@@ -36,6 +37,12 @@ public record LoginResponse(
         @Schema(description = "Authenticated user email", example = "admin@qastore.com") String email,
 
         @Schema(description = "Roles assigned to the authenticated user", example = "[\"ROLE_ADMIN\"]") List<String> roles,
+
+        @Schema(description = "JWT access token", example = "eyJhbGciOiJIUzI1NiJ9...") String accessToken,
+
+        @Schema(description = "Token type used in the Authorization header", example = "Bearer") String tokenType,
+
+        @Schema(description = "Token expiration time in milliseconds", example = "3600000") Long expiresInMs,
 
         @Schema(description = "Human-readable authentication message", example = "Login successful") String message) {
 }

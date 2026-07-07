@@ -19,8 +19,8 @@ import java.util.List;
  *
  * Interaction:
  * AuthController delegates login requests to this service.
- * AuthService uses UserRepository to find users and PasswordEncoder to verify
- * raw passwords against BCrypt hashes stored in MySQL.
+ * AuthService uses UserRepository to find users, PasswordEncoder to verify
+ * raw passwords against BCrypt hashes and JwtService to generate access tokens.
  *
  * Design Pattern:
  * Service Layer.
@@ -29,7 +29,7 @@ import java.util.List;
  * - Separation of concerns: authentication logic is outside the controller.
  * - Security: compares passwords using PasswordEncoder.matches().
  * - Encapsulation: UserEntity is not exposed directly to API clients.
- * - Transaction management: user and role data are loaded inside a read-only transaction.
+ * - Stateless authentication: returns a JWT access token after successful login.
  * ============================================================
  */
 
@@ -39,16 +39,19 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthService(
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     /*
-     * Validates user credentials.
+     * Validates user credentials and generates a JWT access token.
      *
      * Security decisions:
      * - If the email does not exist, return a generic authentication error.
@@ -76,11 +79,16 @@ public class AuthService {
                 .sorted()
                 .toList();
 
+        String accessToken = jwtService.generateToken(user);
+
         return new LoginResponse(
                 true,
                 user.getId(),
                 user.getEmail(),
                 roles,
+                accessToken,
+                "Bearer",
+                jwtService.getExpirationMs(),
                 "Login successful");
     }
 }

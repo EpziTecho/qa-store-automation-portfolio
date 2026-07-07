@@ -99,6 +99,9 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.authenticated", is(true)))
                 .andExpect(jsonPath("$.email", is("admin@qastore.com")))
                 .andExpect(jsonPath("$.roles", contains("ROLE_ADMIN")))
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.tokenType", is("Bearer")))
+                .andExpect(jsonPath("$.expiresInMs", is(3600000)))
                 .andExpect(jsonPath("$.message", is("Login successful")));
     }
 

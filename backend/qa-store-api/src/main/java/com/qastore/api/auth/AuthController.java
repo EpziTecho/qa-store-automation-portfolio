@@ -56,7 +56,7 @@ public class AuthController {
      * In the next block this endpoint will return a JWT access token.
      */
     @PostMapping("/login")
-    @Operation(summary = "Login user", description = "Validates user credentials against the stored BCrypt password hash. JWT generation will be added in the next phase block.")
+    @Operation(summary = "Login user", description = "Validates user credentials against the stored BCrypt password hash and returns a JWT access token.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = LoginResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
