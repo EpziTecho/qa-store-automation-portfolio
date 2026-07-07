@@ -2,14 +2,21 @@
 
 Professional QA Automation portfolio project built as a complete software quality ecosystem.
 
+This repository demonstrates how to design, develop, document, test and prepare a real-world backend/API system for automation testing, CI/CD and portfolio presentation.
+
+---
+
 ## Objective
 
-This repository demonstrates a complete QA Automation architecture using:
+The objective of this project is to build a professional QA Automation portfolio that demonstrates practical experience with:
 
-- Spring Boot backend
-- MySQL database
-- Swagger / OpenAPI
+- Backend development with Spring Boot
+- REST API design
+- MySQL persistence
+- JPA / Hibernate
+- Swagger / OpenAPI documentation
 - JWT authentication
+- Role-based authorization
 - Docker
 - Postman
 - Cypress
@@ -17,7 +24,12 @@ This repository demonstrates a complete QA Automation architecture using:
 - REST Assured
 - GitHub Actions
 - Azure DevOps
-- Professional documentation
+- CI/CD pipelines
+- Professional technical documentation
+
+The project is developed incrementally following engineering practices commonly used in real software teams.
+
+---
 
 ## Project Domain
 
@@ -33,62 +45,28 @@ The domain includes:
 - Orders
 - Order items
 
-This domain was selected because it allows realistic testing scenarios for API testing, UI testing, database validation, security testing, mocking, CI/CD and regression automation.
+This domain was selected because it allows realistic testing scenarios for:
 
-## Repository Structure
+- API testing
+- UI testing
+- Database validation
+- Authentication testing
+- Authorization testing
+- Security testing
+- Mocking
+- CI/CD validation
+- Regression automation
+- Contract validation
 
-```text
-qa-store-automation-portfolio/
-│
-├── backend/
-├── cypress-tests/
-├── selenium-tests/
-├── rest-assured-tests/
-├── postman/
-├── docker/
-├── docs/
-├── .github/workflows/
-├── README.md
-└── .gitignore
-```
+---
 
-## Roadmap
+## Current Status
 
-1. General architecture
-2. Spring Boot backend
-3. MySQL database
-4. Swagger / OpenAPI
-5. JWT authentication
-6. Docker
-7. Postman
-8. Cypress framework
-9. API testing
-10. Mocking and intercept
-11. Selenium + TestNG
-12. REST Assured
-13. GitHub Actions
-14. Azure DevOps
-15. Professional README
-16. Deploy
-
-## Engineering Approach
-
-This project follows professional software engineering practices:
-
-- Clean architecture principles
-- Layered backend architecture
-- Separation of responsibilities
-- Git Flow with feature branches
-- Descriptive commits
-- Pull Request based workflow
-- Automated testing strategy
-- CI/CD pipelines
-- Technical documentation
-
-## Status
-
-Current phase:
+Current completed phases:
 
 ```text
 Phase 1 — General Architecture
-```
+Phase 2 — Spring Boot Backend
+Phase 3 — MySQL Database
+Phase 4 — Swagger / OpenAPI
+Phase 5 — JWT Authentication
