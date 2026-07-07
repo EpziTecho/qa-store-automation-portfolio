@@ -19,11 +19,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * Module: Security Configuration
  *
  * Responsibility:
- * Defines Spring Security configuration for the QA Store API.
+ * Defines authentication and authorization rules for the QA Store API.
  *
  * Interaction:
  * Registers JwtAuthenticationFilter in the Spring Security filter chain.
- * Defines which endpoints are public and which endpoints require authentication.
+ * Defines public endpoints, authenticated endpoints and admin-only endpoints.
  * Configures stateless session management for JWT-based authentication.
  *
  * Design Pattern:
@@ -31,9 +31,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *
  * Engineering Principles:
  * - Separation of concerns: security rules are centralized.
- * - Explicit configuration: avoids accidental exposure of endpoints.
+ * - Explicit authorization: each route group declares its access policy.
  * - Stateless API design: authentication is based on JWT instead of HTTP sessions.
- * - Progressive delivery: only /api/auth/me is protected in this block.
+ * - Principle of least privilege: write operations require ROLE_ADMIN.
  * ============================================================
  */
 
@@ -43,19 +43,22 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            RestAuthenticationEntryPoint restAuthenticationEntryPoint) {
+            RestAuthenticationEntryPoint restAuthenticationEntryPoint,
+            RestAccessDeniedHandler restAccessDeniedHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
+        this.restAccessDeniedHandler = restAccessDeniedHandler;
     }
 
     /*
      * Defines the HTTP security filter chain.
      *
      * JwtAuthenticationFilter runs before UsernamePasswordAuthenticationFilter
-     * so that Bearer tokens can authenticate requests before authorization rules
+     * so Bearer tokens can authenticate requests before authorization rules
      * are evaluated.
      */
     @Bean
@@ -65,21 +68,26 @@ public class SecurityConfig {
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler))
 
                 .authorizeHttpRequests(auth -> auth
+                        /*
+                         * Operational endpoint.
+                         */
                         .requestMatchers("/api/health").permitAll()
 
                         /*
-                         * Login must remain public because users need it to obtain JWTs.
+                         * Authentication endpoints.
                          */
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-
-                        /*
-                         * This endpoint is protected and proves that JWT validation works.
-                         */
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
 
+                        /*
+                         * Swagger/OpenAPI endpoints remain public so the API contract
+                         * can be explored during development.
+                         */
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -88,20 +96,37 @@ public class SecurityConfig {
                         .permitAll()
 
                         /*
-                         * Product and Category remain public until the next block,
-                         * where we will enforce role-based authorization.
+                         * Product catalog read operations are public.
                          */
-                        .requestMatchers("/api/products/**").permitAll()
-                        .requestMatchers("/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
 
+                        /*
+                         * Product catalog write operations require administrator authority.
+                         */
+                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAuthority("ROLE_ADMIN")
+
+                        /*
+                         * Category read operations are public.
+                         */
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+
+                        /*
+                         * Category write operations require administrator authority.
+                         */
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ROLE_ADMIN")
+
+                        /*
+                         * Any route not explicitly configured is denied.
+                         */
                         .anyRequest().denyAll())
 
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
 
-                /*
-                 * Adds the JWT filter into the security chain.
-                 */
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class);

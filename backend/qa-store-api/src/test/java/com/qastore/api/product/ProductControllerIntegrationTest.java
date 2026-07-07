@@ -13,7 +13,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import java.math.BigDecimal;
-
+import com.qastore.api.auth.JwtService;
+import com.qastore.api.user.RoleEntity;
+import com.qastore.api.user.RoleName;
+import com.qastore.api.user.RoleRepository;
+import com.qastore.api.user.UserEntity;
+import com.qastore.api.user.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 /*
  * ============================================================
  * File: ProductControllerIntegrationTest.java
@@ -48,7 +54,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class ProductControllerIntegrationTest {
+        @Autowired
+        private UserRepository userRepository;
 
+        @Autowired
+        private RoleRepository roleRepository;
+
+        @Autowired
+        private PasswordEncoder passwordEncoder;
+
+        @Autowired
+        private JwtService jwtService;
         @Autowired
         private MockMvc mockMvc;
 
@@ -62,6 +78,40 @@ class ProductControllerIntegrationTest {
         void setUp() {
                 productRepository.deleteAll();
                 categoryRepository.deleteAll();
+
+                userRepository.deleteAll();
+                roleRepository.deleteAll();
+        }
+
+        private String adminAuthorizationHeader() {
+                return authorizationHeaderFor(
+                                RoleName.ROLE_ADMIN,
+                                "admin@qastore.com");
+        }
+
+        private String userAuthorizationHeader() {
+                return authorizationHeaderFor(
+                                RoleName.ROLE_USER,
+                                "user@qastore.com");
+        }
+
+        private String authorizationHeaderFor(RoleName roleName, String email) {
+                RoleEntity role = roleRepository.save(new RoleEntity(
+                                roleName,
+                                "Test role"));
+
+                UserEntity user = new UserEntity(
+                                "Test",
+                                "User",
+                                email,
+                                passwordEncoder.encode("Password12345"),
+                                true);
+
+                user.addRole(role);
+
+                UserEntity savedUser = userRepository.save(user);
+
+                return "Bearer " + jwtService.generateToken(savedUser);
         }
 
         @Test
@@ -154,6 +204,7 @@ class ProductControllerIntegrationTest {
                                 """.formatted(accessories.getId());
 
                 mockMvc.perform(post("/api/products")
+                                .header("Authorization", adminAuthorizationHeader())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isCreated())
@@ -181,6 +232,7 @@ class ProductControllerIntegrationTest {
                                 """;
 
                 mockMvc.perform(post("/api/products")
+                                .header("Authorization", adminAuthorizationHeader())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isNotFound())
@@ -204,6 +256,7 @@ class ProductControllerIntegrationTest {
                                 """;
 
                 mockMvc.perform(post("/api/products")
+                                .header("Authorization", adminAuthorizationHeader())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isBadRequest())
@@ -211,6 +264,53 @@ class ProductControllerIntegrationTest {
                                 .andExpect(jsonPath("$.status", is(400)))
                                 .andExpect(jsonPath("$.error", is("Bad Request")))
                                 .andExpect(jsonPath("$.message", is("Request validation failed")));
+        }
+
+        @Test
+        @DisplayName("POST /api/products should return 401 when JWT is missing")
+        void shouldReturnUnauthorizedWhenCreatingProductWithoutJwt() throws Exception {
+                String requestBody = """
+                                {
+                                  "name": "Mechanical Keyboard",
+                                  "description": "Keyboard for automation engineers",
+                                  "price": 85.90,
+                                  "stock": 20,
+                                  "categoryId": 1
+                                }
+                                """;
+
+                mockMvc.perform(post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.status", is(401)))
+                                .andExpect(jsonPath("$.error", is("Unauthorized")))
+                                .andExpect(jsonPath("$.message", is("Authentication is required")));
+        }
+
+        @Test
+        @DisplayName("POST /api/products should return 403 when user is not admin")
+        void shouldReturnForbiddenWhenCreatingProductWithoutAdminRole() throws Exception {
+                String requestBody = """
+                                {
+                                  "name": "Mechanical Keyboard",
+                                  "description": "Keyboard for automation engineers",
+                                  "price": 85.90,
+                                  "stock": 20,
+                                  "categoryId": 1
+                                }
+                                """;
+
+                mockMvc.perform(post("/api/products")
+                                .header("Authorization", userAuthorizationHeader())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody))
+                                .andExpect(status().isForbidden())
+                                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.status", is(403)))
+                                .andExpect(jsonPath("$.error", is("Forbidden")))
+                                .andExpect(jsonPath("$.message", is("Access is denied")));
         }
 
         @Test
@@ -245,6 +345,7 @@ class ProductControllerIntegrationTest {
                                 """.formatted(electronics.getId());
 
                 mockMvc.perform(put("/api/products/" + product.getId())
+                                .header("Authorization", adminAuthorizationHeader())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isOk())
@@ -276,6 +377,7 @@ class ProductControllerIntegrationTest {
                                 """.formatted(electronics.getId());
 
                 mockMvc.perform(put("/api/products/999999")
+                                .header("Authorization", adminAuthorizationHeader())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isNotFound())
@@ -311,6 +413,7 @@ class ProductControllerIntegrationTest {
                                 """;
 
                 mockMvc.perform(put("/api/products/" + product.getId())
+                                .header("Authorization", adminAuthorizationHeader())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isNotFound())
