@@ -13,7 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.List;
 
 /*
@@ -80,6 +80,7 @@ public class AuthController {
      */
     @GetMapping("/me")
     @Operation(summary = "Get current authenticated user", description = "Returns the authenticated user extracted from the JWT Bearer token.")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Authenticated user returned successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CurrentUserResponse.class))),
             @ApiResponse(responseCode = "401", description = "Authentication is required", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class)))

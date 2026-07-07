@@ -13,7 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
 import java.util.List;
 
@@ -81,6 +81,7 @@ public class CategoryController {
 
     @PostMapping
     @Operation(summary = "Create category", description = "Creates a new product category. Category names must be unique.")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Category created successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CategoryResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
@@ -98,6 +99,7 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update category", description = "Updates an existing active category. The new category name must not be used by another category.")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Category updated successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CategoryResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
@@ -115,6 +117,7 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete category", description = "Performs logical deletion by setting active = false. Categories with active products cannot be deleted.")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Category deleted logically"),
             @ApiResponse(responseCode = "404", description = "Category not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponse.class))),
