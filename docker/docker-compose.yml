@@ -1,0 +1,73 @@
+# ============================================================
+# File: docker-compose.yml
+# Module: Local Container Orchestration
+#
+# Responsibility:
+# Runs the QA Store API and MySQL database as local Docker containers.
+#
+# Interaction:
+# The backend container connects to the mysql service using the internal
+# Docker network name: mysql.
+#
+# Design Pattern:
+# Container orchestration configuration.
+#
+# Engineering Principles:
+# - Environment-based configuration.
+# - Service isolation.
+# - Reproducible local environment.
+# - Persistent database volume.
+# ============================================================
+
+name: qa-store-automation
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: qa-store-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    ports:
+      - "${MYSQL_HOST_PORT}:3306"
+
+    volumes:
+      - qa_store_mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${DB_USERNAME} -p${DB_PASSWORD} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    container_name: qa-store-api
+    restart: unless-stopped
+
+    build:
+      context: ../backend/qa-store-api
+      dockerfile: Dockerfile
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+
+    ports:
+      - "8080:8080"
+
+volumes:
+  qa_store_mysql_data:

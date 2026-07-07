@@ -244,3 +244,16 @@ Start the application:
 ```powershell
 $env:DB_PASSWORD="your_mysql_password"
 .\mvnw.cmd spring-boot:run
+
+
+## Running with Docker
+
+The backend can run inside Docker together with a MySQL container.
+
+Docker files:
+
+```text
+backend/qa-store-api/Dockerfile
+backend/qa-store-api/.dockerignore
+docker/docker-compose.yml
+docker/.env.example

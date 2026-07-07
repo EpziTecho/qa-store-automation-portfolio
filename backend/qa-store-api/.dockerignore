@@ -1,0 +1,22 @@
+# ============================================================
+# File: .dockerignore
+# Module: Backend Containerization
+#
+# Responsibility:
+# Excludes unnecessary files from the Docker build context.
+#
+# Interaction:
+# Docker uses this file when building the backend image.
+#
+# Engineering Principles:
+# - Faster Docker builds.
+# - Smaller build context.
+# - Avoid copying local artifacts into the container.
+# ============================================================
+
+target/
+.idea/
+.vscode/
+*.iml
+*.log
+.env
