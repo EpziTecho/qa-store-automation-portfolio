@@ -1,5 +1,6 @@
 package com.qastore.api.product;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -29,15 +30,16 @@ import java.math.BigDecimal;
  * ============================================================
  */
 
+@Schema(description = "Request body used to update an existing product")
 public record UpdateProductRequest(
 
-        @NotBlank(message = "Product name is required") String name,
+                @Schema(description = "Updated product name", example = "Updated Keyboard") @NotBlank(message = "Product name is required") String name,
 
-        @NotBlank(message = "Product description is required") String description,
+                @Schema(description = "Updated product description", example = "Updated keyboard description") @NotBlank(message = "Product description is required") String description,
 
-        @NotNull(message = "Product price is required") @Positive(message = "Product price must be greater than zero") BigDecimal price,
+                @Schema(description = "Updated product price. Must be greater than zero.", example = "99.90") @NotNull(message = "Product price is required") @Positive(message = "Product price must be greater than zero") BigDecimal price,
 
-        @NotNull(message = "Product stock is required") @PositiveOrZero(message = "Product stock cannot be negative") Integer stock,
+                @Schema(description = "Updated available stock. Cannot be negative.", example = "30") @NotNull(message = "Product stock is required") @PositiveOrZero(message = "Product stock cannot be negative") Integer stock,
 
-        @NotNull(message = "Product category is required") Long categoryId) {
+                @Schema(description = "Existing category ID associated with the product", example = "1") @NotNull(message = "Product category is required") Long categoryId) {
 }

@@ -1,5 +1,6 @@
 package com.qastore.api.category;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 /*
@@ -24,9 +25,10 @@ import jakarta.validation.constraints.NotBlank;
  * ============================================================
  */
 
+@Schema(description = "Request body used to create a category")
 public record CreateCategoryRequest(
 
-        @NotBlank(message = "Category name is required") String name,
+                @Schema(description = "Category name. Must be unique.", example = "Electronics") @NotBlank(message = "Category name is required") String name,
 
-        @NotBlank(message = "Category description is required") String description) {
+                @Schema(description = "Category description", example = "Electronic devices and accessories") @NotBlank(message = "Category description is required") String description) {
 }

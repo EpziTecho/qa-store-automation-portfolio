@@ -79,6 +79,24 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!--
+    Springdoc OpenAPI dependency.
+
+    Responsibility:
+    Generates OpenAPI 3 documentation from Spring MVC controllers and exposes
+    Swagger UI for interactive API exploration.
+
+    Why this dependency:
+    - Compatible with Spring Boot 3 applications.
+    - Uses OpenAPI 3 instead of older Swagger 2 approaches.
+    - Reduces manual documentation effort.
+    - Useful for QA, backend validation and API testing workflows.
+-->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.8.17</version>
+		</dependency>
 	</dependencies>
 
 

@@ -234,3 +234,13 @@ The next phase will introduce:
 - Product repository
 - Database-backed service implementation
 - Database integration tests
+
+## Swagger UI
+
+This backend exposes Swagger UI using Springdoc OpenAPI.
+
+Start the application:
+
+```powershell
+$env:DB_PASSWORD="your_mysql_password"
+.\mvnw.cmd spring-boot:run

@@ -1,37 +1,36 @@
 package com.qastore.api.health;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /*
  * ============================================================
  * File: HealthResponse.java
- * Module: Health Check
+ * Module: Health
  *
  * Responsibility:
- * Represents the response body returned by the health check endpoint.
+ * Represents the JSON response returned by the health endpoint.
  *
  * Interaction:
- * This record is created by HealthController and serialized by Spring Boot
- * into JSON when the client calls GET /api/health.
+ * HealthController returns this DTO when GET /api/health is called.
  *
  * Design Pattern:
  * DTO (Data Transfer Object).
  *
  * Engineering Principles:
- * - Single Responsibility Principle: this class only represents response data.
- * - Immutability: Java records are immutable by default.
- * - Clean Code: the response contract is explicit and easy to understand.
+ * - API contract clarity.
+ * - Immutability through Java records.
+ * - Separation between controller logic and response structure.
  * ============================================================
  */
 
-/**
- * HealthResponse defines the JSON contract returned by the health endpoint.
- *
- * Java records are useful for simple immutable DTOs because they automatically
- * provide constructor, getters, equals, hashCode and toString.
- */
+@Schema(description = "Health status response for the QA Store API")
 public record HealthResponse(
-        String status,
-        String service,
-        String version,
-        String message
-) {
+
+                @Schema(description = "Current service status", example = "UP") String status,
+
+                @Schema(description = "Service name", example = "qa-store-api") String service,
+
+                @Schema(description = "Service version", example = "1.0.0") String version,
+
+                @Schema(description = "Human-readable health message", example = "QA Store API is running") String message) {
 }
