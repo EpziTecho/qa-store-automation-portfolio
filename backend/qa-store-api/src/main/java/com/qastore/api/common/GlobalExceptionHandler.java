@@ -12,7 +12,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.qastore.api.category.CategoryHasActiveProductsException;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.qastore.api.auth.InvalidCredentialsException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDateTime;
+import java.util.List;
 /*
  * ============================================================
  * File: GlobalExceptionHandler.java
@@ -119,5 +125,20 @@ public class GlobalExceptionHandler {
                                 List.of());
 
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
+        @ExceptionHandler(InvalidCredentialsException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidCredentials(
+                        InvalidCredentialsException exception,
+                        HttpServletRequest request) {
+                ErrorResponse response = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.UNAUTHORIZED.value(),
+                                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                                exception.getMessage(),
+                                request.getRequestURI(),
+                                List.of());
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 }
