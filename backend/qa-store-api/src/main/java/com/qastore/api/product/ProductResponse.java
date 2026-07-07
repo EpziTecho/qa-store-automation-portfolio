@@ -29,7 +29,9 @@ public record ProductResponse(
         String description,
         BigDecimal price,
         Integer stock,
-        Boolean active) {
+        Boolean active,
+        Long categoryId,
+        String categoryName) {
 
     /*
      * Converts the internal Product model into an HTTP response DTO.
@@ -44,6 +46,8 @@ public record ProductResponse(
                 product.description(),
                 product.price(),
                 product.stock(),
-                product.active());
+                product.active(),
+                product.categoryId(),
+                product.categoryName());
     }
 }

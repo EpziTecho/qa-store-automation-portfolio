@@ -49,7 +49,7 @@ public class ProductController {
     /*
      * GET /api/products
      *
-     * Returns all available products.
+     * Returns all active products.
      */
     @GetMapping
     public ResponseEntity<List<ProductResponse>> findAll() {
@@ -64,9 +64,7 @@ public class ProductController {
     /*
      * GET /api/products/{id}
      *
-     * Returns a single product by id.
-     * If the product does not exist, ProductNotFoundException is thrown
-     * and handled by GlobalExceptionHandler.
+     * Returns a single active product by id.
      */
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> findById(@PathVariable Long id) {
@@ -79,8 +77,6 @@ public class ProductController {
      * POST /api/products
      *
      * Creates a new product.
-     * 
-     * @Valid triggers Bean Validation before the method body executes.
      */
     @PostMapping
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody CreateProductRequest request) {
@@ -91,5 +87,31 @@ public class ProductController {
         return ResponseEntity
                 .created(location)
                 .body(ProductResponse.from(createdProduct));
+    }
+
+    /*
+     * PUT /api/products/{id}
+     *
+     * Updates an existing active product.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateProductRequest request) {
+        Product updatedProduct = productService.update(id, request);
+
+        return ResponseEntity.ok(ProductResponse.from(updatedProduct));
+    }
+
+    /*
+     * DELETE /api/products/{id}
+     *
+     * Performs logical deletion by marking active = false.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        productService.delete(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

@@ -31,11 +31,13 @@ import java.math.BigDecimal;
 
 public record CreateProductRequest(
 
-        @NotBlank(message = "Product name is required") String name,
+                @NotBlank(message = "Product name is required") String name,
 
-        @NotBlank(message = "Product description is required") String description,
+                @NotBlank(message = "Product description is required") String description,
 
-        @NotNull(message = "Product price is required") @Positive(message = "Product price must be greater than zero") BigDecimal price,
+                @NotNull(message = "Product price is required") @Positive(message = "Product price must be greater than zero") BigDecimal price,
 
-        @NotNull(message = "Product stock is required") @PositiveOrZero(message = "Product stock cannot be negative") Integer stock) {
+                @NotNull(message = "Product stock is required") @PositiveOrZero(message = "Product stock cannot be negative") Integer stock,
+
+                @NotNull(message = "Product category is required") Long categoryId) {
 }

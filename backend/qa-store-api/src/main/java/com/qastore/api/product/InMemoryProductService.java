@@ -1,5 +1,6 @@
 package com.qastore.api.product;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -14,24 +15,26 @@ import java.util.concurrent.atomic.AtomicLong;
  * Module: Product
  *
  * Responsibility:
- * Provides a temporary in-memory implementation of ProductService.
+ * Provides an alternative in-memory implementation of ProductService.
  *
  * Interaction:
- * ProductController calls ProductService methods.
- * Spring injects this implementation because it is annotated with @Service.
+ * ProductController depends on ProductService.
+ * This implementation is only enabled when the Spring profile "in-memory"
+ * is active.
  *
  * Design Pattern:
  * Service Layer.
  *
  * Engineering Principles:
- * - Single Responsibility Principle: manages product operations for this phase.
  * - Dependency Inversion: implements ProductService abstraction.
- * - Thread-safety: uses ConcurrentHashMap and AtomicLong.
- * - Incremental design: will later be replaced by a database-backed implementation.
+ * - Replaceable implementation: can be swapped with ProductJpaService.
+ * - Profile-based configuration: avoids bean conflicts with the JPA service.
+ * - Testability: useful for isolated local executions without database access.
  * ============================================================
  */
 
 @Service
+@Profile("in-memory")
 public class InMemoryProductService implements ProductService {
 
     private final ConcurrentHashMap<Long, Product> products = new ConcurrentHashMap<>();
@@ -44,7 +47,9 @@ public class InMemoryProductService implements ProductService {
                 "Laptop designed for automation testing practice",
                 new BigDecimal("1200.00"),
                 10,
-                true);
+                true,
+                1L,
+                "Electronics");
 
         Product mouse = new Product(
                 sequence.incrementAndGet(),
@@ -52,7 +57,9 @@ public class InMemoryProductService implements ProductService {
                 "Wireless mouse for QA workstation",
                 new BigDecimal("25.50"),
                 50,
-                true);
+                true,
+                2L,
+                "Accessories");
 
         products.put(laptop.id(), laptop);
         products.put(mouse.id(), mouse);
@@ -62,6 +69,7 @@ public class InMemoryProductService implements ProductService {
     public List<Product> findAll() {
         return products.values()
                 .stream()
+                .filter(Product::active)
                 .sorted(Comparator.comparing(Product::id))
                 .toList();
     }
@@ -70,7 +78,7 @@ public class InMemoryProductService implements ProductService {
     public Product findById(Long id) {
         Product product = products.get(id);
 
-        if (product == null) {
+        if (product == null || !product.active()) {
             throw new ProductNotFoundException(id);
         }
 
@@ -87,10 +95,64 @@ public class InMemoryProductService implements ProductService {
                 request.description(),
                 request.price(),
                 request.stock(),
-                true);
+                true,
+                request.categoryId(),
+                resolveCategoryName(request.categoryId()));
 
         products.put(id, product);
 
         return product;
+    }
+
+    @Override
+    public Product update(Long id, UpdateProductRequest request) {
+        Product existingProduct = findById(id);
+
+        Product updatedProduct = new Product(
+                existingProduct.id(),
+                request.name(),
+                request.description(),
+                request.price(),
+                request.stock(),
+                true,
+                request.categoryId(),
+                resolveCategoryName(request.categoryId()));
+
+        products.put(id, updatedProduct);
+
+        return updatedProduct;
+    }
+
+    @Override
+    public void delete(Long id) {
+        Product existingProduct = findById(id);
+
+        Product inactiveProduct = new Product(
+                existingProduct.id(),
+                existingProduct.name(),
+                existingProduct.description(),
+                existingProduct.price(),
+                existingProduct.stock(),
+                false,
+                existingProduct.categoryId(),
+                existingProduct.categoryName());
+
+        products.put(id, inactiveProduct);
+    }
+
+    private String resolveCategoryName(Long categoryId) {
+        if (categoryId == null) {
+            return "Unassigned";
+        }
+
+        if (categoryId.equals(1L)) {
+            return "Electronics";
+        }
+
+        if (categoryId.equals(2L)) {
+            return "Accessories";
+        }
+
+        return "In-Memory Category";
     }
 }
