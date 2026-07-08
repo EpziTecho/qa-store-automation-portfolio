@@ -70,3 +70,8 @@ Phase 2 — Spring Boot Backend
 Phase 3 — MySQL Database
 Phase 4 — Swagger / OpenAPI
 Phase 5 — JWT Authentication
+Phase 6 — Docker
+Phase 7 — Postman
+
+Current phase
+Phase 8 — Cypress Framework
