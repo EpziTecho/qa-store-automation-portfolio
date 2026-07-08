@@ -1,0 +1,300 @@
+{
+  "info": {
+    "_postman_id": "qa-store-api-collection",
+    "name": "QA Store API",
+    "description": "Postman collection for QA Store API. Includes health checks, authentication, JWT validation and catalog read requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Validates that the QA Store API is running."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Service status is UP\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(\"UP\");",
+                  "});",
+                  "",
+                  "pm.test(\"Service name is qa-store-api\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.service).to.eql(\"qa-store-api\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "POST Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates the default admin user and stores the JWT access token in the Postman environment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Login response contains access token\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.authenticated).to.eql(true);",
+                  "    pm.expect(response.accessToken).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(response.tokenType).to.eql(\"Bearer\");",
+                  "});",
+                  "",
+                  "pm.test(\"Authenticated user has ROLE_ADMIN\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.roles).to.include(\"ROLE_ADMIN\");",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.environment.set(\"accessToken\", response.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Current User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Validates that the stored JWT token can access the protected current-user endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Current user email matches admin email\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.email).to.eql(pm.environment.get(\"adminEmail\"));",
+                  "});",
+                  "",
+                  "pm.test(\"Current user has ROLE_ADMIN\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.roles).to.include(\"ROLE_ADMIN\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Current User Without Token - 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Negative test. Validates that /api/auth/me requires authentication."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response is Unauthorized\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(401);",
+                  "    pm.expect(response.error).to.eql(\"Unauthorized\");",
+                  "    pm.expect(response.message).to.eql(\"Authentication is required\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "GET All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            },
+            "description": "Retrieves all active categories. This is a public endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "const categories = pm.response.json();",
+                  "if (categories.length > 0) {",
+                  "    pm.environment.set(\"categoryId\", categories[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "GET All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            },
+            "description": "Retrieves all active products. This is a public endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "const products = pm.response.json();",
+                  "if (products.length > 0) {",
+                  "    pm.environment.set(\"productId\", products[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
