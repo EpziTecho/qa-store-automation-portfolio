@@ -772,6 +772,550 @@
             "description": "Retrieves all active products. This is a public endpoint."
           },
           "response": []
+        },
+        {
+          "name": "POST Create Category For Product Tests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product test category contains required fields\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.id).to.exist;\r",
+                  "    pm.expect(response.name).to.be.a(\"string\").and.not.empty;\r",
+                  "    pm.expect(response.description).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.environment.set(\"productCategoryId\", response.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Product Test Category {{$timestamp}}\",\r\n  \"description\": \"Category created to support Postman product tests\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product response contains required fields\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.id).to.exist;\r",
+                  "    pm.expect(response.name).to.be.a(\"string\").and.not.empty;\r",
+                  "    pm.expect(response.description).to.be.a(\"string\").and.not.empty;\r",
+                  "    pm.expect(response.price).to.exist;\r",
+                  "    pm.expect(response.stock).to.exist;\r",
+                  "    pm.expect(response.categoryId).to.exist;\r",
+                  "    pm.expect(response.categoryName).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product category matches productCategoryId\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.categoryId).to.eql(Number(pm.environment.get(\"productCategoryId\")));\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.environment.set(\"productId\", response.id);\r",
+                  "pm.environment.set(\"productName\", response.name);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Postman Product {{$timestamp}}\",\r\n  \"description\": \"Product created from Postman automated request\",\r\n  \"price\": 149.90,\r\n  \"stock\": 25,\r\n  \"categoryId\": {{productCategoryId}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Product By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product ID matches environment productId\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.id).to.eql(Number(pm.environment.get(\"productId\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product name matches environment productName\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.name).to.eql(pm.environment.get(\"productName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has category information\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.categoryId).to.eql(Number(pm.environment.get(\"productCategoryId\")));\r",
+                  "    pm.expect(response.categoryName).to.be.a(\"string\").and.not.empty;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Updated product contains expected fields\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.id).to.eql(Number(pm.environment.get(\"productId\")));\r",
+                  "    pm.expect(response.name).to.be.a(\"string\").and.not.empty;\r",
+                  "    pm.expect(response.description).to.eql(\"Product updated from Postman automated request\");\r",
+                  "    pm.expect(Number(response.price)).to.eql(199.90);\r",
+                  "    pm.expect(response.stock).to.eql(40);\r",
+                  "    pm.expect(response.categoryId).to.eql(Number(pm.environment.get(\"productCategoryId\")));\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.environment.set(\"productName\", response.name);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Updated Postman Product {{$timestamp}}\",\r\n  \"description\": \"Product updated from Postman automated request\",\r\n  \"price\": 199.90,\r\n  \"stock\": 40,\r\n  \"categoryId\": {{productCategoryId}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Invalid Product - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error response is Bad Request\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.status).to.eql(400);\r",
+                  "    pm.expect(response.error).to.eql(\"Bad Request\");\r",
+                  "    pm.expect(response.message).to.eql(\"Request validation failed\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Validation details exist\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.details).to.be.an(\"array\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"\",\r\n  \"description\": \"\",\r\n  \"price\": -10,\r\n  \"stock\": -5,\r\n  \"categoryId\": null\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Product With Invalid Category - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error response is Not Found\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.status).to.eql(404);\r",
+                  "    pm.expect(response.error).to.eql(\"Not Found\");\r",
+                  "    pm.expect(response.message).to.be.a(\"string\").and.not.empty;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Product With Invalid Category {{$timestamp}}\",\r\n  \"description\": \"This request should fail because category does not exist\",\r\n  \"price\": 99.90,\r\n  \"stock\": 10,\r\n  \"categoryId\": 99999999\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Product Without Token - 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error response is Unauthorized\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.status).to.eql(401);\r",
+                  "    pm.expect(response.error).to.eql(\"Unauthorized\");\r",
+                  "    pm.expect(response.message).to.eql(\"Authentication is required\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Unauthorized Product {{$timestamp}}\",\r\n  \"description\": \"This request should fail because JWT is missing\",\r\n  \"price\": 50.00,\r\n  \"stock\": 5,\r\n  \"categoryId\": {{productCategoryId}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {\r",
+                  "    pm.response.to.have.status(204);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response body is empty\", function () {\r",
+                  "    pm.expect(pm.response.text()).to.eql(\"\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Deleted Product By ID - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error response is Not Found\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.status).to.eql(404);\r",
+                  "    pm.expect(response.error).to.eql(\"Not Found\");\r",
+                  "    pm.expect(response.message).to.be.a(\"string\").and.not.empty;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }
