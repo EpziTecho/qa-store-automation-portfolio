@@ -58,3 +58,16 @@ export const buildUniqueProductPayload = (baseProduct, categoryId) => {
         categoryId,
     };
 };
+
+/*
+ * Builds an updated category payload using a base category.
+ *
+ * This is useful for PUT /api/categories/{id} tests.
+ */
+export const buildUpdatedCategoryPayload = (baseCategory) => {
+    return {
+        ...baseCategory,
+        name: `Updated ${baseCategory.name} ${uniqueSuffix()}`,
+        description: "Category updated from Cypress API regression test",
+    };
+};

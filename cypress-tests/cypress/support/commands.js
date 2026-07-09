@@ -163,3 +163,45 @@ Cypress.Commands.add("apiDeleteProduct", (productId) => {
         failOnStatusCode: false,
     });
 });
+
+/*
+ * Retrieves all active categories.
+ */
+Cypress.Commands.add("apiGetAllCategories", () => {
+    return cy.request({
+        method: "GET",
+        url: "/api/categories",
+        failOnStatusCode: false,
+    });
+});
+
+/*
+ * Updates a category by ID using an authenticated admin token.
+ */
+Cypress.Commands.add("apiUpdateCategory", (categoryId, categoryPayload) => {
+    const token = Cypress.env("accessToken");
+
+    return cy.request({
+        method: "PUT",
+        url: `/api/categories/${categoryId}`,
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        failOnStatusCode: false,
+        body: categoryPayload,
+    });
+});
+
+/*
+ * Creates a category without sending JWT.
+ *
+ * This command is used to validate 401 Unauthorized scenarios.
+ */
+Cypress.Commands.add("apiCreateCategoryWithoutToken", (categoryPayload) => {
+    return cy.request({
+        method: "POST",
+        url: "/api/categories",
+        failOnStatusCode: false,
+        body: categoryPayload,
+    });
+});
