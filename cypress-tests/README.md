@@ -20,3 +20,12 @@ Current implemented test:
 
 ```http
 GET /api/health
+
+## Fixtures and Data Factories
+
+The Cypress framework uses fixtures and data factory helpers to keep test data reusable and maintainable.
+
+Fixtures are located in:
+
+```text
+cypress/fixtures/
