@@ -9,8 +9,6 @@
  *
  * Interaction:
  * Uses cy.intercept() to control requests made from the browser context.
- * The backend may be running, but mocked requests do not depend on real
- * database data.
  *
  * Design Pattern:
  * Network Stub / Test Double.
@@ -23,63 +21,57 @@
  * ============================================================
  */
 
+import { INTERCEPT_ROUTES } from "../../support/interceptRoutes";
+
+import {
+    buildInternalServerError,
+    buildMockedProductList,
+} from "../../support/mockBuilders";
+
 describe("Network Mocking with cy.intercept", () => {
-    /*
-     * We visit Swagger UI only to have a valid same-origin browser page.
-     *
-     * The test itself does not depend on Swagger behavior.
-     * After the page loads, we execute fetch() from the browser context.
-     */
     const visitBrowserContext = () => {
         cy.visit("/swagger-ui.html");
     };
 
-    it("should mock GET /api/products response using fixture data", () => {
-        cy.fixture("products/mocked-products.json").then((mockedProducts) => {
-            cy.intercept("GET", "**/api/products", {
-                statusCode: 200,
-                body: mockedProducts,
-            }).as("getMockedProducts");
+    it("should mock GET /api/products response using builder data", () => {
+        const mockedProducts = buildMockedProductList();
 
-            visitBrowserContext();
+        cy.intercept("GET", INTERCEPT_ROUTES.products.base, {
+            statusCode: 200,
+            body: mockedProducts,
+        }).as("getMockedProducts");
 
-            cy.window().then((window) => {
-                return window
-                    .fetch("/api/products")
-                    .then((response) => response.json())
-                    .then((body) => {
-                        expect(body).to.have.length(2);
-                        expect(body[0]).to.have.property("id", 1001);
-                        expect(body[0]).to.have.property(
-                            "name",
-                            "Mocked Cypress Laptop",
-                        );
-                        expect(body[0]).to.have.property(
-                            "categoryName",
-                            "Mocked Electronics",
-                        );
-                    });
-            });
+        visitBrowserContext();
 
-            cy.wait("@getMockedProducts").then((interception) => {
-                expect(interception.request.method).to.eq("GET");
-                expect(interception.response.statusCode).to.eq(200);
-                expect(interception.response.body).to.have.length(2);
-            });
+        cy.window().then((window) => {
+            return window
+                .fetch("/api/products")
+                .then((response) => response.json())
+                .then((body) => {
+                    expect(body).to.have.length(2);
+                    expect(body[0]).to.have.property("id", 1001);
+                    expect(body[0]).to.have.property(
+                        "name",
+                        "Mocked Cypress Laptop",
+                    );
+                    expect(body[0]).to.have.property(
+                        "categoryName",
+                        "Mocked Electronics",
+                    );
+                });
+        });
+
+        cy.wait("@getMockedProducts").then((interception) => {
+            expect(interception.request.method).to.eq("GET");
+            expect(interception.response.statusCode).to.eq(200);
+            expect(interception.response.body).to.have.length(2);
         });
     });
 
     it("should simulate 500 Internal Server Error for GET /api/categories", () => {
-        cy.intercept("GET", "**/api/categories", {
+        cy.intercept("GET", INTERCEPT_ROUTES.categories.base, {
             statusCode: 500,
-            body: {
-                timestamp: new Date().toISOString(),
-                status: 500,
-                error: "Internal Server Error",
-                message: "Simulated server failure from Cypress intercept",
-                path: "/api/categories",
-                details: [],
-            },
+            body: buildInternalServerError("/api/categories"),
         }).as("getCategoriesFailure");
 
         visitBrowserContext();
@@ -112,7 +104,7 @@ describe("Network Mocking with cy.intercept", () => {
     });
 
     it("should spy on real GET /api/health request without modifying the response", () => {
-        cy.intercept("GET", "**/api/health").as("getHealth");
+        cy.intercept("GET", INTERCEPT_ROUTES.health).as("getHealth");
 
         visitBrowserContext();
 

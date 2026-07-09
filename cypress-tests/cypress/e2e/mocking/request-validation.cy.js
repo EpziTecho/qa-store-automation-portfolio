@@ -21,13 +21,15 @@
  * ============================================================
  */
 
+import { INTERCEPT_ROUTES } from "../../support/interceptRoutes";
+
+import {
+    buildCreatedProductResponse,
+    buildMockedProduct,
+    buildUnauthorizedError,
+} from "../../support/mockBuilders";
+
 describe("Request validation with cy.intercept", () => {
-    /*
-     * We visit Swagger UI only to create a valid browser context.
-     *
-     * The test does not validate Swagger itself.
-     * The network request is executed manually through window.fetch().
-     */
     const visitBrowserContext = () => {
         cy.visit("/swagger-ui.html");
     };
@@ -41,23 +43,9 @@ describe("Request validation with cy.intercept", () => {
             categoryId: 777,
         };
 
-        const mockedResponse = {
-            id: 9001,
-            name: productPayload.name,
-            description: productPayload.description,
-            price: productPayload.price,
-            stock: productPayload.stock,
-            categoryId: productPayload.categoryId,
-            categoryName: "Intercept Category",
-        };
+        const mockedResponse = buildCreatedProductResponse(productPayload);
 
-        cy.intercept("POST", "**/api/products", (req) => {
-            /*
-             * These assertions validate what the browser/client is sending.
-             *
-             * In a real UI test, this is how we verify that the frontend sends the
-             * correct payload after a user completes a form.
-             */
+        cy.intercept("POST", INTERCEPT_ROUTES.products.base, (req) => {
             expect(req.method).to.eq("POST");
             expect(req.headers).to.have.property("content-type");
             expect(req.headers["content-type"]).to.include("application/json");
@@ -113,20 +101,13 @@ describe("Request validation with cy.intercept", () => {
             categoryId: 777,
         };
 
-        cy.intercept("POST", "**/api/products", (req) => {
+        cy.intercept("POST", INTERCEPT_ROUTES.products.base, (req) => {
             expect(req.method).to.eq("POST");
             expect(req.headers).to.not.have.property("authorization");
 
             req.reply({
                 statusCode: 401,
-                body: {
-                    timestamp: new Date().toISOString(),
-                    status: 401,
-                    error: "Unauthorized",
-                    message: "Authentication is required",
-                    path: "/api/products",
-                    details: [],
-                },
+                body: buildUnauthorizedError("/api/products"),
             });
         }).as("createProductWithoutAuth");
 
@@ -165,7 +146,7 @@ describe("Request validation with cy.intercept", () => {
 
     it("should simulate slow response for GET /api/products", () => {
         const delayedProducts = [
-            {
+            buildMockedProduct({
                 id: 9101,
                 name: "Delayed Mock Product",
                 description: "Product returned after artificial delay",
@@ -173,10 +154,10 @@ describe("Request validation with cy.intercept", () => {
                 stock: 8,
                 categoryId: 801,
                 categoryName: "Delayed Category",
-            },
+            }),
         ];
 
-        cy.intercept("GET", "**/api/products", {
+        cy.intercept("GET", INTERCEPT_ROUTES.products.base, {
             statusCode: 200,
             delay: 1500,
             body: delayedProducts,
