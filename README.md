@@ -72,6 +72,8 @@ Phase 4 — Swagger / OpenAPI
 Phase 5 — JWT Authentication
 Phase 6 — Docker
 Phase 7 — Postman
+Phase 8 — Cypress Framework
+
 
 Current phase
-Phase 8 — Cypress Framework
+Phase 9 — API Testing
