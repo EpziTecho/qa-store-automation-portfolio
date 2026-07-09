@@ -73,7 +73,10 @@ Phase 5 — JWT Authentication
 Phase 6 — Docker
 Phase 7 — Postman
 Phase 8 — Cypress Framework
+Phase 9 — API Testing
+Phase 10 — Selenium + TestNG
+
 
 
 Current phase
-Phase 9 — API Testing
+Phase 11 — REST Assured

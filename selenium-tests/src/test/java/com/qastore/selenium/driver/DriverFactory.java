@@ -1,3 +1,26 @@
+/*
+ * ============================================================
+ * File: DriverFactory.java
+ * Module: Selenium WebDriver Factory
+ *
+ * Responsibility:
+ * Creates configured WebDriver instances for supported browsers.
+ *
+ * Interaction:
+ * BaseTest calls DriverFactory.createDriver() before each test method.
+ * BrowserConfig provides runtime configuration such as browser and headless mode.
+ *
+ * Design Pattern:
+ * Factory Method.
+ *
+ * Engineering Principles:
+ * - Single Responsibility: only creates WebDriver instances.
+ * - Open/Closed Principle: new browsers can be added without modifying tests.
+ * - DRY: browser setup is centralized.
+ * - CI/CD-ready: supports headless execution by default.
+ * ============================================================
+ */
+
 package com.qastore.selenium.driver;
 
 import com.qastore.selenium.config.BrowserConfig;
@@ -9,6 +32,10 @@ import org.openqa.selenium.chrome.ChromeOptions;
 public final class DriverFactory {
 
     private DriverFactory() {
+        /*
+         * Utility class.
+         * Prevents instantiation because this class only exposes factory methods.
+         */
     }
 
     public static WebDriver createDriver() {
@@ -16,7 +43,8 @@ public final class DriverFactory {
 
         return switch (browser) {
             case "chrome" -> createChromeDriver();
-            default -> throw new IllegalArgumentException("Unsupported browser: " + browser);
+            default -> throw new IllegalArgumentException(
+                    "Unsupported browser: " + browser);
         };
     }
 
