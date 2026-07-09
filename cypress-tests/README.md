@@ -29,3 +29,11 @@ Fixtures are located in:
 
 ```text
 cypress/fixtures/
+
+
+## API Route Constants
+
+API routes are centralized in:
+
+```text
+cypress/support/apiRoutes.js
