@@ -29,3 +29,19 @@ Fixtures are located in:
 
 ```text
 cypress/fixtures/
+
+
+## API Route Constants
+
+API routes are centralized in:
+
+```text
+cypress/support/apiRoutes.js
+
+
+## Mock Builders and Intercept Routes
+
+Mock response builders are centralized in:
+
+```text
+cypress/support/mockBuilders.js

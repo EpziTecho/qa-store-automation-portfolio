@@ -25,6 +25,11 @@
  * ============================================================
  */
 
+import {
+    assertInvalidCredentialsError,
+    assertUnauthorizedError,
+} from "../../support/apiAssertions";
+
 describe("Authentication API", () => {
     it("should login as admin and return a JWT access token", () => {
         cy.apiLoginAsAdmin().then((response) => {
@@ -63,28 +68,13 @@ describe("Authentication API", () => {
 
     it("should return 401 when accessing current user without JWT", () => {
         cy.apiGetCurrentUser(null).then((response) => {
-            expect(response.status).to.eq(401);
-
-            expect(response.body).to.have.property("status", 401);
-            expect(response.body).to.have.property("error", "Unauthorized");
-            expect(response.body).to.have.property(
-                "message",
-                "Authentication is required",
-            );
-            expect(response.body).to.have.property("path", "/api/auth/me");
+            assertUnauthorizedError(response, "/api/auth/me");
         });
     });
 
     it("should return 401 when accessing current user with invalid JWT", () => {
         cy.apiGetCurrentUser("invalid.token.value").then((response) => {
-            expect(response.status).to.eq(401);
-
-            expect(response.body).to.have.property("status", 401);
-            expect(response.body).to.have.property("error", "Unauthorized");
-            expect(response.body).to.have.property(
-                "message",
-                "Authentication is required",
-            );
+            assertUnauthorizedError(response, "/api/auth/me");
         });
     });
 
@@ -98,15 +88,7 @@ describe("Authentication API", () => {
                 password: "WrongPassword123",
             },
         }).then((response) => {
-            expect(response.status).to.eq(401);
-
-            expect(response.body).to.have.property("status", 401);
-            expect(response.body).to.have.property("error", "Unauthorized");
-            expect(response.body).to.have.property(
-                "message",
-                "Invalid email or password",
-            );
-            expect(response.body).to.have.property("path", "/api/auth/login");
+            assertInvalidCredentialsError(response);
         });
     });
 });

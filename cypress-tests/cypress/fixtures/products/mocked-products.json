@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1001,
+    "name": "Mocked Cypress Laptop",
+    "description": "Product returned from cy.intercept mock",
+    "price": 999.9,
+    "stock": 15,
+    "categoryId": 501,
+    "categoryName": "Mocked Electronics"
+  },
+  {
+    "id": 1002,
+    "name": "Mocked Cypress Mouse",
+    "description": "Second product returned from cy.intercept mock",
+    "price": 49.9,
+    "stock": 40,
+    "categoryId": 502,
+    "categoryName": "Mocked Accessories"
+  }
+]

@@ -1,3 +1,22 @@
+# Database Model - QA Store API
+
+## 1. Purpose
+
+This document describes the relational database model used by the QA Store API.
+
+The database is designed to support a professional QA Automation portfolio project, where backend, API testing, UI testing, database validation and CI/CD practices can be demonstrated using a realistic business domain.
+
+The current database engine is MySQL.
+
+---
+
+## 2. Current Database
+
+Database name:
+
+```sql
+qa_store_db
+
 Main tables:
 
 categories
@@ -73,31 +92,3 @@ Product stock cannot be negative.
 Product must belong to an existing category.
 Products are logically deleted using active = false.
 Inactive products are not returned by normal API queries.
-6. Soft Delete Strategy
-
-The project uses soft delete for products and categories.
-
-Instead of physically deleting records, the application updates the active field:
-
-UPDATE products SET active = false WHERE id = ?;
-UPDATE categories SET active = false WHERE id = ?;
-
-Normal API queries only return active records.
-
-Example repository methods:
-
-findAllByActiveTrueOrderByIdAsc();
-findByIdAndActiveTrue(id);
-
-Advantages:
-
-Preserves historical data.
-Supports auditability.
-Avoids accidental data loss.
-Simulates common enterprise application behavior.
-
-Disadvantages:
-
-Queries must consistently filter active records.
-Unique constraints need careful design.
-Data cleanup requires additional maintenance policies.

@@ -1,0 +1,110 @@
+package com.qastore.api.user;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+/*
+ * ============================================================
+ * File: UserDetailsServiceIntegrationTest.java
+ * Module: User Security Tests
+ *
+ * Responsibility:
+ * Validates that application users can be loaded as Spring Security UserDetails.
+ *
+ * Interaction:
+ * Uses UserDetailsServiceImpl with UserRepository and RoleRepository.
+ * Verifies that roles are converted into GrantedAuthority values.
+ *
+ * Design Pattern:
+ * Integration Test.
+ *
+ * Engineering Principles:
+ * - Validates security adapter logic.
+ * - Ensures inactive users cannot authenticate.
+ * - Provides regression protection for JWT filter user loading.
+ * ============================================================
+ */
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+@SpringBootTest
+class UserDetailsServiceIntegrationTest {
+
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Should load active user as UserDetails with authorities")
+    void shouldLoadActiveUserAsUserDetailsWithAuthorities() {
+        RoleEntity adminRole = roleRepository.save(new RoleEntity(
+                RoleName.ROLE_ADMIN,
+                "Administrator role"
+        ));
+
+        UserEntity user = new UserEntity(
+                "System",
+                "Administrator",
+                "admin@qastore.com",
+                passwordEncoder.encode("Admin12345"),
+                true
+        );
+
+        user.addRole(adminRole);
+
+        userRepository.save(user);
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername("ADMIN@QASTORE.COM");
+
+        assertThat(userDetails.getUsername()).isEqualTo("admin@qastore.com");
+        assertThat(userDetails.getAuthorities())
+                .extracting(authority -> authority.getAuthority())
+                .containsExactly("ROLE_ADMIN");
+        assertThat(userDetails.isEnabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Should reject inactive user")
+    void shouldRejectInactiveUser() {
+        RoleEntity userRole = roleRepository.save(new RoleEntity(
+                RoleName.ROLE_USER,
+                "Standard user role"
+        ));
+
+        UserEntity inactiveUser = new UserEntity(
+                "Inactive",
+                "User",
+                "inactive@qastore.com",
+                passwordEncoder.encode("User12345"),
+                false
+        );
+
+        inactiveUser.addRole(userRole);
+
+        userRepository.save(inactiveUser);
+
+        assertThatThrownBy(() -> userDetailsService.loadUserByUsername("inactive@qastore.com"))
+                .isInstanceOf(UsernameNotFoundException.class);
+    }
+}
