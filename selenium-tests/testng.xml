@@ -1,0 +1,30 @@
+<!--
+  ============================================================
+  File: testng.xml
+  Module: TestNG Suite Configuration
+
+  Responsibility:
+  Defines which Selenium TestNG test classes are executed.
+
+  Interaction:
+  Maven Surefire reads this file from pom.xml and executes the listed test
+  classes.
+
+  Design Pattern:
+  Suite Configuration.
+
+  Engineering Principles:
+  - Explicit test execution.
+  - Scalable test grouping.
+  - CI/CD-ready test suite definition.
+  ============================================================
+-->
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="QA Store Selenium Suite" verbose="1" parallel="false">
+    <test name="Swagger UI Smoke Tests">
+        <classes>
+            <class name="com.qastore.selenium.tests.SwaggerSmokeTest" />
+        </classes>
+    </test>
+</suite>

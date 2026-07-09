@@ -1,0 +1,104 @@
+<!--
+  ============================================================
+  File: pom.xml
+  Module: Selenium + TestNG Automation Framework
+
+  Responsibility:
+  Defines the Maven configuration, dependencies and test execution plugin for
+  the Selenium UI automation module.
+
+  Interaction:
+  Maven uses this file to download Selenium, TestNG and WebDriverManager
+  dependencies. The Surefire plugin executes TestNG tests through testng.xml.
+
+  Design Pattern:
+  Build Configuration.
+
+  Engineering Principles:
+  - Separation of concerns: Selenium tests live outside backend and Cypress.
+  - Dependency versioning: library versions are centralized in properties.
+  - Reproducibility: tests can run from CLI and later from CI/CD.
+  - Scalability: prepares the module for Page Object Model and UI regression.
+  ============================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.qastore</groupId>
+    <artifactId>qa-store-selenium-tests</artifactId>
+    <version>1.0.0</version>
+
+    <name>QA Store Selenium Tests</name>
+    <description>Selenium WebDriver and TestNG automation framework for QA Store.</description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <selenium.version>4.41.0</selenium.version>
+        <testng.version>7.12.0</testng.version>
+        <webdrivermanager.version>6.3.4</webdrivermanager.version>
+        <slf4j.simple.version>2.0.17</slf4j.simple.version>
+        <maven.surefire.plugin.version>3.5.6</maven.surefire.plugin.version>
+    </properties>
+
+    <dependencies>
+        <!-- Selenium WebDriver: browser automation library. -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- TestNG: Java test framework used for test lifecycle and assertions. -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- WebDriverManager: automatically manages browser drivers. -->
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>${webdrivermanager.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Simple logger implementation to avoid missing SLF4J binding warnings. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.simple.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Maven Surefire executes TestNG tests during the Maven test phase. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+
+                    <systemPropertyVariables>
+                        <browser>${browser}</browser>
+                        <headless>${headless}</headless>
+                        <base.url>${base.url}</base.url>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -65,3 +65,8 @@ temp/
 
 # Docker local environment files
 docker/.env
+
+# Selenium / Maven artifacts
+selenium-tests/target/
+selenium-tests/.idea/
+selenium-tests/*.iml
