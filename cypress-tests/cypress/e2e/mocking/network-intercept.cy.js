@@ -4,11 +4,11 @@
  * Module: Cypress Mocking and Network Intercept Tests
  *
  * Responsibility:
- * Demonstrates how to use cy.intercept() to spy, mock and simulate API
- * responses from the browser network layer.
+ * Demonstrates how to use reusable intercept commands to spy, mock and simulate
+ * API responses from the browser network layer.
  *
  * Interaction:
- * Uses cy.intercept() to control requests made from the browser context.
+ * Uses custom intercept commands loaded from cypress/support/interceptCommands.js.
  *
  * Design Pattern:
  * Network Stub / Test Double.
@@ -21,25 +21,13 @@
  * ============================================================
  */
 
-import { INTERCEPT_ROUTES } from "../../support/interceptRoutes";
-
-import {
-    buildInternalServerError,
-    buildMockedProductList,
-} from "../../support/mockBuilders";
-
 describe("Network Mocking with cy.intercept", () => {
     const visitBrowserContext = () => {
         cy.visit("/swagger-ui.html");
     };
 
-    it("should mock GET /api/products response using builder data", () => {
-        const mockedProducts = buildMockedProductList();
-
-        cy.intercept("GET", INTERCEPT_ROUTES.products.base, {
-            statusCode: 200,
-            body: mockedProducts,
-        }).as("getMockedProducts");
+    it("should mock GET /api/products response using reusable intercept command", () => {
+        cy.mockGetProductsSuccess();
 
         visitBrowserContext();
 
@@ -69,10 +57,7 @@ describe("Network Mocking with cy.intercept", () => {
     });
 
     it("should simulate 500 Internal Server Error for GET /api/categories", () => {
-        cy.intercept("GET", INTERCEPT_ROUTES.categories.base, {
-            statusCode: 500,
-            body: buildInternalServerError("/api/categories"),
-        }).as("getCategoriesFailure");
+        cy.mockGetCategoriesServerError();
 
         visitBrowserContext();
 
@@ -104,7 +89,7 @@ describe("Network Mocking with cy.intercept", () => {
     });
 
     it("should spy on real GET /api/health request without modifying the response", () => {
-        cy.intercept("GET", INTERCEPT_ROUTES.health).as("getHealth");
+        cy.spyGetHealth();
 
         visitBrowserContext();
 

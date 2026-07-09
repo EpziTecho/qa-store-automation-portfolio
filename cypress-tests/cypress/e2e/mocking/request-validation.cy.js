@@ -4,11 +4,12 @@
  * Module: Cypress Request Validation with cy.intercept
  *
  * Responsibility:
- * Demonstrates how to validate outgoing HTTP requests using cy.intercept().
+ * Demonstrates how to validate outgoing HTTP requests using reusable
+ * cy.intercept() custom commands.
  *
  * Interaction:
  * Executes browser-level fetch() calls from a valid application page and
- * intercepts those requests before they reach the backend.
+ * validates them through intercept commands.
  *
  * Design Pattern:
  * Network Spy / Network Stub.
@@ -21,12 +22,9 @@
  * ============================================================
  */
 
-import { INTERCEPT_ROUTES } from "../../support/interceptRoutes";
-
 import {
     buildCreatedProductResponse,
     buildMockedProduct,
-    buildUnauthorizedError,
 } from "../../support/mockBuilders";
 
 describe("Request validation with cy.intercept", () => {
@@ -43,24 +41,9 @@ describe("Request validation with cy.intercept", () => {
             categoryId: 777,
         };
 
-        const mockedResponse = buildCreatedProductResponse(productPayload);
+        const expectedResponse = buildCreatedProductResponse(productPayload);
 
-        cy.intercept("POST", INTERCEPT_ROUTES.products.base, (req) => {
-            expect(req.method).to.eq("POST");
-            expect(req.headers).to.have.property("content-type");
-            expect(req.headers["content-type"]).to.include("application/json");
-            expect(req.headers).to.have.property(
-                "authorization",
-                "Bearer fake-jwt-token",
-            );
-
-            expect(req.body).to.deep.eq(productPayload);
-
-            req.reply({
-                statusCode: 201,
-                body: mockedResponse,
-            });
-        }).as("createProduct");
+        cy.mockCreateProductSuccess(productPayload);
 
         visitBrowserContext();
 
@@ -80,7 +63,7 @@ describe("Request validation with cy.intercept", () => {
                     return response.json();
                 })
                 .then((body) => {
-                    expect(body).to.deep.eq(mockedResponse);
+                    expect(body).to.deep.eq(expectedResponse);
                 });
         });
 
@@ -88,7 +71,7 @@ describe("Request validation with cy.intercept", () => {
             expect(interception.request.method).to.eq("POST");
             expect(interception.request.body).to.deep.eq(productPayload);
             expect(interception.response.statusCode).to.eq(201);
-            expect(interception.response.body).to.deep.eq(mockedResponse);
+            expect(interception.response.body).to.deep.eq(expectedResponse);
         });
     });
 
@@ -101,15 +84,7 @@ describe("Request validation with cy.intercept", () => {
             categoryId: 777,
         };
 
-        cy.intercept("POST", INTERCEPT_ROUTES.products.base, (req) => {
-            expect(req.method).to.eq("POST");
-            expect(req.headers).to.not.have.property("authorization");
-
-            req.reply({
-                statusCode: 401,
-                body: buildUnauthorizedError("/api/products"),
-            });
-        }).as("createProductWithoutAuth");
+        cy.mockCreateProductUnauthorized();
 
         visitBrowserContext();
 
@@ -157,11 +132,7 @@ describe("Request validation with cy.intercept", () => {
             }),
         ];
 
-        cy.intercept("GET", INTERCEPT_ROUTES.products.base, {
-            statusCode: 200,
-            delay: 1500,
-            body: delayedProducts,
-        }).as("getProductsWithDelay");
+        cy.mockGetProductsWithDelay(delayedProducts, 1500);
 
         visitBrowserContext();
 
