@@ -20,8 +20,16 @@
  * - Dynamic data: factories avoid conflicts with existing records.
  * - Security validation: protected endpoints require JWT.
  * - Cleanup: products are deleted before categories to respect business rules.
+ * - Reusable assertions: standard API errors are validated consistently.
  * ============================================================
  */
+
+import {
+    assertBadRequestValidationError,
+    assertNoContentResponse,
+    assertNotFoundError,
+    assertUnauthorizedError,
+} from "../../support/apiAssertions";
 
 import {
     buildUniqueCategoryPayload,
@@ -40,8 +48,10 @@ describe("Product API Regression", () => {
     /*
      * Helper used by product tests.
      *
-     * It creates a dedicated category for the test and returns its response.
-     * This avoids using hardcoded category IDs.
+     * It creates a dedicated active category for the test and returns the
+     * created category response body.
+     *
+     * This avoids hardcoded category IDs and keeps each test independent.
      */
     const createCategoryForProductTest = () => {
         return cy
@@ -68,11 +78,11 @@ describe("Product API Regression", () => {
      */
     const deleteProductAndCategory = (productId, categoryId) => {
         cy.apiDeleteProduct(productId).then((deleteProductResponse) => {
-            expect(deleteProductResponse.status).to.eq(204);
+            assertNoContentResponse(deleteProductResponse);
         });
 
         cy.apiDeleteCategory(categoryId).then((deleteCategoryResponse) => {
-            expect(deleteCategoryResponse.status).to.eq(204);
+            assertNoContentResponse(deleteCategoryResponse);
         });
     };
 
@@ -176,6 +186,7 @@ describe("Product API Regression", () => {
                     baseProduct,
                     category.id,
                 );
+
                 const updatePayload = buildUpdatedProductPayload(
                     baseProduct,
                     category.id,
@@ -229,32 +240,22 @@ describe("Product API Regression", () => {
     it("should return 400 when creating product with invalid payload", () => {
         cy.fixture("products/invalid-product.json").then((invalidPayload) => {
             cy.apiCreateProduct(invalidPayload).then((response) => {
-                expect(response.status).to.eq(400);
-
-                expect(response.body).to.have.property("status", 400);
-                expect(response.body).to.have.property("error", "Bad Request");
-                expect(response.body).to.have.property(
-                    "message",
-                    "Request validation failed",
-                );
-                expect(response.body.details).to.be.an("array");
+                assertBadRequestValidationError(response, "/api/products");
             });
         });
     });
 
     it("should return 404 when creating product with non-existing category", () => {
         cy.fixture("products/create-product.json").then((baseProduct) => {
+            const nonExistingCategoryId = 99999999;
+
             const productPayload = buildUniqueProductPayload(
                 baseProduct,
-                99999999,
+                nonExistingCategoryId,
             );
 
             cy.apiCreateProduct(productPayload).then((response) => {
-                expect(response.status).to.eq(404);
-
-                expect(response.body).to.have.property("status", 404);
-                expect(response.body).to.have.property("error", "Not Found");
-                expect(response.body).to.have.property("message");
+                assertNotFoundError(response, "/api/products");
             });
         });
     });
@@ -269,27 +270,13 @@ describe("Product API Regression", () => {
 
                 cy.apiCreateProductWithoutToken(productPayload).then(
                     (response) => {
-                        expect(response.status).to.eq(401);
-
-                        expect(response.body).to.have.property("status", 401);
-                        expect(response.body).to.have.property(
-                            "error",
-                            "Unauthorized",
-                        );
-                        expect(response.body).to.have.property(
-                            "message",
-                            "Authentication is required",
-                        );
-                        expect(response.body).to.have.property(
-                            "path",
-                            "/api/products",
-                        );
+                        assertUnauthorizedError(response, "/api/products");
                     },
                 );
 
                 cy.apiDeleteCategory(category.id).then(
                     (deleteCategoryResponse) => {
-                        expect(deleteCategoryResponse.status).to.eq(204);
+                        assertNoContentResponse(deleteCategoryResponse);
                     },
                 );
             });
@@ -311,32 +298,22 @@ describe("Product API Regression", () => {
 
                     cy.apiDeleteProduct(productId).then(
                         (deleteProductResponse) => {
-                            expect(deleteProductResponse.status).to.eq(204);
-                            expect(deleteProductResponse.body).to.eq("");
+                            assertNoContentResponse(deleteProductResponse);
                         },
                     );
 
                     cy.apiGetProductById(productId).then(
                         (getDeletedResponse) => {
-                            expect(getDeletedResponse.status).to.eq(404);
-
-                            expect(getDeletedResponse.body).to.have.property(
-                                "status",
-                                404,
-                            );
-                            expect(getDeletedResponse.body).to.have.property(
-                                "error",
-                                "Not Found",
-                            );
-                            expect(getDeletedResponse.body).to.have.property(
-                                "message",
+                            assertNotFoundError(
+                                getDeletedResponse,
+                                `/api/products/${productId}`,
                             );
                         },
                     );
 
                     cy.apiDeleteCategory(category.id).then(
                         (deleteCategoryResponse) => {
-                            expect(deleteCategoryResponse.status).to.eq(204);
+                            assertNoContentResponse(deleteCategoryResponse);
                         },
                     );
                 });

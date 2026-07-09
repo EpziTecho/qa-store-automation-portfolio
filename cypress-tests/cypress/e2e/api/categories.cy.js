@@ -21,7 +21,13 @@
  * - Cleanup: created records are deleted when applicable.
  * ============================================================
  */
-
+import {
+    assertBadRequestValidationError,
+    assertConflictError,
+    assertNoContentResponse,
+    assertNotFoundError,
+    assertUnauthorizedError,
+} from "../../support/apiAssertions";
 import {
     buildUniqueCategoryPayload,
     buildUpdatedCategoryPayload,
@@ -59,7 +65,7 @@ describe("Category API Regression", () => {
                 const categoryId = response.body.id;
 
                 cy.apiDeleteCategory(categoryId).then((deleteResponse) => {
-                    expect(deleteResponse.status).to.eq(204);
+                    assertNoContentResponse(deleteResponse);
                 });
             });
         });
@@ -141,17 +147,7 @@ describe("Category API Regression", () => {
                 const categoryId = firstResponse.body.id;
 
                 cy.apiCreateCategory(payload).then((duplicateResponse) => {
-                    expect(duplicateResponse.status).to.eq(409);
-
-                    expect(duplicateResponse.body).to.have.property(
-                        "status",
-                        409,
-                    );
-                    expect(duplicateResponse.body).to.have.property(
-                        "error",
-                        "Conflict",
-                    );
-                    expect(duplicateResponse.body).to.have.property("message");
+                    assertConflictError(duplicateResponse, "/api/categories");
                 });
 
                 cy.apiDeleteCategory(categoryId).then((deleteResponse) => {
@@ -165,18 +161,10 @@ describe("Category API Regression", () => {
         cy.fixture("categories/invalid-category.json").then(
             (invalidPayload) => {
                 cy.apiCreateCategory(invalidPayload).then((response) => {
-                    expect(response.status).to.eq(400);
-
-                    expect(response.body).to.have.property("status", 400);
-                    expect(response.body).to.have.property(
-                        "error",
-                        "Bad Request",
+                    assertBadRequestValidationError(
+                        response,
+                        "/api/categories",
                     );
-                    expect(response.body).to.have.property(
-                        "message",
-                        "Request validation failed",
-                    );
-                    expect(response.body.details).to.be.an("array");
                 });
             },
         );
@@ -187,18 +175,7 @@ describe("Category API Regression", () => {
             const payload = buildUniqueCategoryPayload(baseCategory);
 
             cy.apiCreateCategoryWithoutToken(payload).then((response) => {
-                expect(response.status).to.eq(401);
-
-                expect(response.body).to.have.property("status", 401);
-                expect(response.body).to.have.property("error", "Unauthorized");
-                expect(response.body).to.have.property(
-                    "message",
-                    "Authentication is required",
-                );
-                expect(response.body).to.have.property(
-                    "path",
-                    "/api/categories",
-                );
+                assertUnauthorizedError(response, "/api/categories");
             });
         });
     });
@@ -218,17 +195,10 @@ describe("Category API Regression", () => {
                 });
 
                 cy.apiGetCategoryById(categoryId).then((getDeletedResponse) => {
-                    expect(getDeletedResponse.status).to.eq(404);
-
-                    expect(getDeletedResponse.body).to.have.property(
-                        "status",
-                        404,
+                    assertNotFoundError(
+                        getDeletedResponse,
+                        `/api/categories/${categoryId}`,
                     );
-                    expect(getDeletedResponse.body).to.have.property(
-                        "error",
-                        "Not Found",
-                    );
-                    expect(getDeletedResponse.body).to.have.property("message");
                 });
             });
         });

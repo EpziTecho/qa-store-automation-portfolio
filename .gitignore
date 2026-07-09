@@ -26,9 +26,9 @@ yarn-error.log*
 package-lock.json
 
 # Cypress generated artifacts
-cypress/screenshots/
-cypress/videos/
-cypress/downloads/
+cypress-tests/cypress/screenshots/
+cypress-tests/cypress/videos/
+cypress-tests/cypress/downloads/
 
 # Test reports
 allure-results/
