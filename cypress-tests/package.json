@@ -7,6 +7,7 @@
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "cy:run:api": "cypress run --spec \"cypress/e2e/api/**/*.cy.js\"",
+    "cy:run:mocking": "cypress run --spec \"cypress/e2e/mocking/**/*.cy.js\"",
     "test": "npm run cy:run"
   },
   "keywords": [
