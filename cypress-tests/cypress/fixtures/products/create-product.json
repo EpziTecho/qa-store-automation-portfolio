@@ -1,0 +1,6 @@
+{
+  "name": "Cypress Product",
+  "description": "Product created from Cypress fixture",
+  "price": 149.9,
+  "stock": 25
+}

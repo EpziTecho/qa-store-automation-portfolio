@@ -71,3 +71,19 @@ export const buildUpdatedCategoryPayload = (baseCategory) => {
         description: "Category updated from Cypress API regression test",
     };
 };
+
+/*
+ * Builds an updated product payload using a base product and category ID.
+ *
+ * This is useful for PUT /api/products/{id} tests.
+ */
+export const buildUpdatedProductPayload = (baseProduct, categoryId) => {
+    return {
+        ...baseProduct,
+        name: `Updated ${baseProduct.name} ${uniqueSuffix()}`,
+        description: "Product updated from Cypress API regression test",
+        price: 199.9,
+        stock: 40,
+        categoryId,
+    };
+};

@@ -205,3 +205,45 @@ Cypress.Commands.add("apiCreateCategoryWithoutToken", (categoryPayload) => {
         body: categoryPayload,
     });
 });
+
+/*
+ * Retrieves all active products.
+ */
+Cypress.Commands.add("apiGetAllProducts", () => {
+    return cy.request({
+        method: "GET",
+        url: "/api/products",
+        failOnStatusCode: false,
+    });
+});
+
+/*
+ * Updates a product by ID using an authenticated admin token.
+ */
+Cypress.Commands.add("apiUpdateProduct", (productId, productPayload) => {
+    const token = Cypress.env("accessToken");
+
+    return cy.request({
+        method: "PUT",
+        url: `/api/products/${productId}`,
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        failOnStatusCode: false,
+        body: productPayload,
+    });
+});
+
+/*
+ * Creates a product without sending JWT.
+ *
+ * This command validates 401 Unauthorized scenarios.
+ */
+Cypress.Commands.add("apiCreateProductWithoutToken", (productPayload) => {
+    return cy.request({
+        method: "POST",
+        url: "/api/products",
+        failOnStatusCode: false,
+        body: productPayload,
+    });
+});
